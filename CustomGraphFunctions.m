@@ -190,6 +190,26 @@ StartRun[inputdirs_List,parameters_List,runname_String,server_String,nproc_Integ
 		"As above, so below!"
 	)]
 
+ResultsIndex[inputdir_String]:=
+	Module[{filenames,datasets,methods,networks,variants,result,x},(
+		filenames=FileNames["result*.txt",inputdir];
+		datasets=Union[Flatten[StringCases[filenames,"~"~~x:RegularExpression["\\D+"]~~__~~".txt"->x]]];
+		
+		result = 
+			Table[
+				{
+					i,
+					datasets[[i]],
+					methods=Union[Flatten[StringCases[filenames,x:RegularExpression["[01]{3,3}\\d+"]~~"~"~~datasets[[i]]~~__~~".txt"->x]]],
+					networks=Table[Length[Union[Flatten[StringCases[filenames,methods[[j]]~~"~"~~datasets[[i]]~~x:RegularExpression["\\d+"]~~__~~".txt"->x]]]],{j,1,Length[methods]}],
+					variants=Table[Length[Flatten[StringCases[filenames,methods[[j]]~~"~"~~datasets[[i]]~~ToString[First[networks]]~~"-"~~x:RegularExpression["\\d+"]~~".txt"->x]]],{j,1,Length[methods]}]
+				}
+			,{i,1,Length[datasets]}];
+		
+		PrependTo[result,{"#","Dataset","Method","# Networks","# Variants"}];
+		Grid[result,Frame->All]
+	)]
+
 End[]
 
 
