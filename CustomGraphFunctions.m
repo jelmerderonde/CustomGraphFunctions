@@ -13,6 +13,7 @@ HierarchyLevels::usage = "HierarchyLevels[g,n,s] gives a list of n hierarchy lev
 HierarchyHistogram::usage = "HierarchyHistogram[g,n,s] gives a histogram of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
 LevelInteractions::usage = "LevelInteractions[g,n,s] gives a level interaction matrix of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
 StartRun::usage = "StartRun[inputdirs,parameters,runname,server,nproc] starts a run on a remote server with the files in inputdirs as input.";
+ResultsIndex::usage = "ResultsIndex[inputdir] searches the directory inputdir for result files and displays the available run results as a table.";
 
 
 Begin["`Private`"]
@@ -101,7 +102,7 @@ HierarchyLevels[graph_Graph,nlevels_Integer,server_String]:=
 	)]
 
 HierarchyHistogram[graph_Graph,nlevels_Integer,server_String]:=
-	Module[{colors,levels,data},(
+	Module[{colors,levels,data,h,v,l},(
 		colors={Green,Blue,Red,Purple,Orange,Cyan};
 		levels=HierarchyLevels[graph,nlevels,server];
 		data=Table[
