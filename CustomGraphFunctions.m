@@ -14,6 +14,7 @@ HierarchyHistogram::usage = "HierarchyHistogram[g,n,s] gives a histogram of n hi
 LevelInteractions::usage = "LevelInteractions[g,n,s] gives a level interaction matrix of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
 StartRun::usage = "StartRun[inputdirs,parameters,runname,server,nproc] starts a run on a remote server with the files in inputdirs as input.";
 ResultsIndex::usage = "ResultsIndex[inputdir] searches the directory inputdir for result files and displays the available run results as a table.";
+PrepareRun::usage = "PrepareRun[inputdirs,parameters,runname,nproc,outputdir] prepares a run in the outputdir with the files in inputdirs as input.";
 
 
 Begin["`Private`"]
@@ -189,6 +190,39 @@ StartRun[inputdirs_List,parameters_List,runname_String,server_String,nproc_Integ
 		
 		"As above, so below!"
 	)]
+
+PrepareRun[inputdirs_List,parameters_List,runname_String,nproc_Integer,outputdir_String]:=
+	Module[{filestocopy,inputfiles,runs},(
+		SetDirectory[outputdir];
+		
+		Table[
+			filestocopy=FileNames["*.txt",inputdirs[[i]]];
+			Table[
+				CopyFile[filestocopy[[j]],FileNameJoin[{Directory[],FileNameTake[filestocopy[[j]]]}]];
+				,{j,1,Length[filestocopy]}];
+			,{i,1,Length[inputdirs]}
+		];
+		
+		inputfiles=FileNames["*.txt"];
+		
+		runs=Table[
+			"./main "<>parameters[[j]]<>" --input "<>inputfiles[[i]]
+			,{i,1,Length[inputfiles]}
+			,{j,1,Length[parameters]}
+		]//Flatten;
+		runs=Partition[runs,IntegerPart[Length[runs]/nproc],IntegerPart[Length[runs]/nproc],1,{}];
+		
+		Table[
+			Export[ToString[i]<>".sh",runs[[i]],"Text"]
+		,{i,1,Length[runs]}];
+
+		Export["run.sh",
+			Table[
+				"screen -d -m "<>ToString[i]<>".sh"
+			,{i,1,Length[runs]}]
+		,"Text"];
+		
+)]
 
 ResultsIndex[inputdir_String]:=
 	Module[{filenames,datasets,methods,networks,variants,result,x},(
