@@ -211,11 +211,12 @@ ResultsIndex[inputdir_String]:=
 					datasets[[i]],
 					methods=Union[Flatten[StringCases[filenames,x:RegularExpression["[01]{3,3}\\d+"]~~"~"~~datasets[[i]]~~__~~".txt"->x]]],
 					networks=Table[Length[Union[Flatten[StringCases[filenames,methods[[j]]~~"~"~~datasets[[i]]~~x:RegularExpression["\\d+"]~~__~~".txt"->x]]]],{j,1,Length[methods]}],
-					variants=Table[Length[Flatten[StringCases[filenames,methods[[j]]~~"~"~~datasets[[i]]~~ToString[First[networks]]~~"-"~~x:RegularExpression["\\d+"]~~".txt"->x]]],{j,1,Length[methods]}]
+					variants=Table[Length[Flatten[StringCases[filenames,methods[[j]]~~"~"~~datasets[[i]]~~ToString[First[networks]]~~"-"~~x:RegularExpression["\\d+"]~~".txt"->x]]],{j,1,Length[methods]}],
+					Total[networks*variants]
 				}
 			,{i,1,Length[datasets]}];
 		
-		PrependTo[result,{"#","Dataset","Method","# Networks","# Variants"}];
+		PrependTo[result,{"#","Dataset","Method","# Networks","# Variants","# Files"}];
 		Grid[result,Frame->All]
 	)]
 
