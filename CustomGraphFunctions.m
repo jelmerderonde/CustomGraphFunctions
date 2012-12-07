@@ -36,6 +36,8 @@ domainSizes::usage = "domainSizes[result] returns all the domain sizes of the (n
 transientLengths::usage = "transientLengths[result] returns all the transients of the (non-zero) found attractors.";
 activeNodeCount::usage = "activeNodeCount[result] the number of nodes that are active in the (non-zero) found attractors.";
 
+readResultDirectory::usage = "readResultDirectory[inputdir] reads all the result files in inputdir, creates symbols for them and returns a list with the symbols.";
+
 
 Begin["`Private`"]
 
@@ -242,6 +244,36 @@ readResult[name_Symbol,inputfile_String]:=
 		activeNodeCount[name]^=rawdata[[4;;-1,4]];
 
 		Protect[name];
+
+readResultDirectory[inputdir_String]:=
+	Module[{initialdirectory,datasets,files,symbolscreated,basename},(
+		initialdirectory=Directory[];
+		SetDirectory[inputdir];
+		datasets=ResultsIndex[Directory[]][[1,2;;-1,2]];
+		symbolscreated={};
+		
+		Table[
+			basename=datasets[[i]];
+			files=FileNames["*"~~basename~~"*.txt"];
+			
+			Table[
+				readResult[ToExpression[basename~~ToString[j]],files[[j]]];
+				AppendTo[symbolscreated,
+					{
+						ToExpression[basename~~ToString[j]],
+						networkName[ToExpression[basename~~ToString[j]]],
+						networkID[ToExpression[basename~~ToString[j]]],
+						variantID[ToExpression[basename~~ToString[j]]],
+						synchronousQ[ToExpression[basename~~ToString[j]]],
+						randomOrderQ[ToExpression[basename~~ToString[j]]],
+						decayCounter[ToExpression[basename~~ToString[j]]],
+						falseFeedbackQ[ToExpression[basename~~ToString[j]]]
+					}];
+			,{j,1,Length[files]}]
+		,{i,1,Length[datasets]}];
+		
+		SetDirectory[initialdirectory];
+		symbolscreated
 	)]
 
 DomainSizesHistogram[data_List,opts:OptionsPattern[]]:=
