@@ -17,6 +17,26 @@ ResultsIndex::usage = "ResultsIndex[inputdir] searches the directory inputdir fo
 PrepareRun::usage = "PrepareRun[inputdirs,parameters,runname,nproc,outputdir] prepares a run in the outputdir with the files in inputdirs as input.";
 DomainSizesHistogram::usage = "DomainSizesHistogram[data] returns a log log histogram of domain sizes.";
 
+readResult::usage = "readResult[name,inputfile] reads and interprets the inputfile and assigns UpValues (pseudofunctions) to name which allow results to be easily read out.";
+
+networkName::usage = "networkName[result] returns the name of the network.";
+networkID::usage = "networkID[result] returns the network ID.";
+variantID::usage = "variantID[result] returns the variant ID.";
+initialStatesCount::usage = "initialStatesCount[result] returns the number of initial states used in this run.";
+vertexCount::usage = "vertexCount[result] returns the number of vertices in het network.";
+edgeCount::usage = "edgeCount[result] returns the number of edges in the network.";
+convergingStatesRatio::usage = "convergingStatesRatio[result] returns the ratio of states that converged to an attractor.";
+synchronousQ::usage = "synchronousQ[result] returns a boolean whether the run was synchronously updated.";
+randomOrderQ::usage = "randomOrderQ[result] returns a boolean whether the update order of the run was random.";
+decayCounter::usage = "decayCounter[result] returns the decay counter.";
+falseFeedbackQ::usage = "falseFeedbackQ[result] returns a boolean whether the false feedback was on in the run.";
+attractors::usage = "attractors[result] returns all (non-zero) found attractors.";
+attractorCount::usage = "attractorCount[result] returns the number of (non-zero) attractors found.";
+attractorLengths::usage = "attractorLengths[result] returns all the cycle lengths of the (non-zero) found attractors.";
+domainSizes::usage = "domainSizes[result] returns all the domain sizes of the (non-zero) found attractors.";
+transientLengths::usage = "transientLengths[result] returns all the transients of the (non-zero) found attractors.";
+activeNodeCount::usage = "activeNodeCount[result] the number of nodes that are active in the (non-zero) found attractors.";
+
 
 Begin["`Private`"]
 
@@ -245,6 +265,33 @@ ResultsIndex[inputdir_String]:=
 		
 		PrependTo[result,{"#","Dataset","Method","# Networks","# Variants"}];
 		Grid[result,Frame->All]
+	)]
+
+readResult[name_Symbol,inputfile_String]:=
+	Module[{rawdata,networkname,networkid,variantid},(
+		ClearAll[name];
+		rawdata=ReadList[inputfile];
+		rawdata=DeleteCases[rawdata,{0,0,{0},0},\[Infinity]];
+		
+		networkName[name]^=StringCases[inputfile,__~~"~"~~networkname:RegularExpression["\\D+"]->networkname][[1]];
+		networkID[name]^=StringCases[inputfile,__~~"~"~~RegularExpression["\\D+"]~~networkid:RegularExpression["\\d+"]->networkid][[1]];
+		variantID[name]^=StringCases[inputfile,__~~"~"~~RegularExpression["\\D+"]~~RegularExpression["\\d+"]~~"-"~~variantid:RegularExpression["\\d+"]->variantid][[1]];
+		initialStatesCount[name]^=rawdata[[2,2]];
+		vertexCount[name]^=rawdata[[2,4]];
+		edgeCount[name]^=rawdata[[2,5]];
+		convergingStatesRatio[name]^=Total[rawdata[[4;;-1,2]]]/rawdata[[2,2]];
+		synchronousQ[name]^=If[rawdata[[2,6]]==1,True,False];
+		randomOrderQ[name]^=If[rawdata[[2,7]]==1,True,False];
+		decayCounter[name]^=rawdata[[2,8]];
+		falseFeedbackQ[name]^=If[rawdata[[2,9]]==1,True,False];
+		attractors[name]^=rawdata[[4;;-1]];
+		attractorCount[name]^=Length[rawdata]-4;
+		attractorLengths[name]^=rawdata[[4;;-1,1]];
+		domainSizes[name]^=rawdata[[4;;-1,2]];
+		transientLengths[name]^=rawdata[[4;;-1,3]];
+		activeNodeCount[name]^=rawdata[[4;;-1,4]];
+
+		Protect[name];
 	)]
 
 DomainSizesHistogram[data_List,opts:OptionsPattern[]]:=
