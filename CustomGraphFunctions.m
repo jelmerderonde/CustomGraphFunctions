@@ -222,6 +222,7 @@ ResultsIndex[inputdir_String]:=
 
 readResult[name_Symbol,inputfile_String]:=
 	Module[{rawdata,networkname,networkid,variantid},(
+		Unprotect[name];
 		ClearAll[name];
 		rawdata=ReadList[inputfile];
 		rawdata=DeleteCases[rawdata,{0,0,{0},0},\[Infinity]];
@@ -245,6 +246,8 @@ readResult[name_Symbol,inputfile_String]:=
 		activeNodeCount[name]^=rawdata[[4;;-1,4]];
 
 		Protect[name];
+		name
+	)]
 
 readResultDirectory[inputdir_String]:=
 	Module[{initialdirectory,datasets,files,symbolscreated,basename},(
