@@ -37,6 +37,10 @@ transientLengths::usage = "transientLengths[result] returns all the transients o
 activeNodeCount::usage = "activeNodeCount[result] the number of nodes that are active in the (non-zero) found attractors.";
 
 readResultDirectory::usage = "readResultDirectory[inputdir] reads all the result files in inputdir, creates symbols for them and returns a list with the symbols.";
+sortResultSymbols::usage = "sortResultSymbols[symbols] works with the output (or a subset of the output) of readResultDirectory and sorts the symbols into lists of the same network.";
+resultRow::usage = "resultRow[symbols] uses a set of result symbols to create a formatted output row of analyzed data";
+resultTable::usage = "resultTable[symbols] creates resultRows of all sets of symbols and displays it in a single grid.";
+fullResultTable::usage = "fullResultTable[inputdir] gives the resultTable of all the files in inputdir. Use with caution!";
 
 
 Begin["`Private`"]
@@ -292,6 +296,111 @@ DomainSizesHistogram[data_List,opts:OptionsPattern[]]:=
 			Ticks->{CustomTicks`LogTicks[0,5],Automatic}
 		]
 )]
+sortResultSymbols[symbols_List]:=
+	Module[{patterns},(
+		patterns=symbols[[All,2;;4]]//Union;
+		Table[
+			Cases[symbols,{_,patterns[[i,1]],patterns[[i,2]],patterns[[i,3]],_,_,_,_}]
+		,{i,1,Length[patterns]}]
+	)]
+
+resultRow[symbols_List]:=
+	Module[{methods,output,methodoutput,methodwidth,header1,header2,methodheader1,methodheader2},(
+		(*Generating a list of methods*)
+		methods=symbols[[All,5;;8]]//Union//Sort;
+		
+		(*Starting the output row*)
+		output=
+			{
+				symbols[[1,2]],
+				symbols[[1,3]],
+				symbols[[1,4]],
+				Column[{
+					"# States: "~~ToString[initialStatesCount[symbols[[1,1]]]],
+					"# Vertices: "~~ToString[vertexCount[symbols[[1,1]]]],
+					"# Edges: "~~ToString[edgeCount[symbols[[1,1]]]]
+				}]
+			};
+		
+		(*Generating specific output per method*)
+		methodoutput={};
+		Table[
+			AppendTo[methodoutput,
+				{
+					Column[{
+						"Data: "~~ToString[symbols[[i,1]]],
+						"# Attractors: "~~ToString[attractorCount[symbols[[i,1]]]],
+						"% Converging: "~~ToString[convergingStatesRatio[symbols[[i,1]]]*100//N]~~"%"
+					}],
+					domainSizesHistogram[
+						domainSizes[symbols[[i,1]]],
+						ImageSize->150,
+						AxesLabel->None,
+						Ticks->None
+					]
+				}
+			],
+		{i,1,Length[methods]}];
+		methodwidth=Length[methodoutput[[1]]];(*Saving the number of columns per method*)
+		methodoutput=Flatten[methodoutput];
+		
+		(*Adding the method output to the output*)
+		Table[
+			AppendTo[output,
+				methodoutput[[i]]
+			],
+		{i,1,Length[methodoutput]}];
+		
+		(*Building the header containg info about the different methods*)
+		header1={"Network",SpanFromLeft,SpanFromLeft,SpanFromLeft};
+
+		methodheader1=Table[
+			{
+				Column[{
+					"Updating: "~~If[synchronousQ[symbols[[i,1]]],"Synchronous","Asynchronous"],
+					"Decay counter: "~~ToString[decayCounter[symbols[[i,1]]]],
+					"False feedback: "~~If[falseFeedbackQ[symbols[[i,1]]],"Yes","No"]
+				}],
+				Table[
+					SpanFromLeft,
+				{methodwidth-1}]//Flatten
+			},
+		{i,1,Length[methods]}];
+
+		methodheader1=Flatten[methodheader1];
+		
+		Table[
+			AppendTo[header1,
+				methodheader1[[i]]
+			],
+		{i,1,Length[methodheader1]}];
+		
+		(*Building the header containg the column titles*)
+		header2={"Name","ID","Var","Info"};
+		methodheader2=Table[{"Runinfo","Domain sizes"},{Length[methods]}];
+		methodheader2=Flatten[methodheader2];
+	
+		Table[
+			AppendTo[header2,
+				methodheader2[[i]]
+			],
+		{i,1,Length[methodheader2]}];
+
+		(*Generating the output grid*)
+		Grid[{header1,header2,output},Frame->All]
+	)]
+
+resultTable[symbols_List]:=
+	Module[{output},(
+		output=resultRow[symbols[[1]]][[1,1;;2]];
+		Table[
+			AppendTo[output,resultRow[symbols[[i]]][[1,3]]];
+		,{i,1,Length[symbols]}];
+		Grid[output,Frame->All]
+	)]
+
+fullResultTable[inputdir_String]:=
+	resultTable[sortResultSymbols[readResultDirectory[inputdir]]]
 
 End[]
 
