@@ -3,18 +3,18 @@
 BeginPackage["CustomGraphFunctions`"];
 
 
-GenerateTopology::usage = "GenerateTopology[g,w] generates a list whose elements encode edges in directed graph g with weights randomly  picked from list w.";
-TopologyList::usage = "TopologyList[g,w] generates output of directed graph g with weights w suitable for export to use with CNetwork.";
-EncodeGraph::usage = "EncodeGraph[] generates a directed graph from the ENCODE consortium.";
-RandomIOGraph::usage = "RandomIOGraph[g,i] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times.";
-RandomAllGraph::usage = "RandomAllGraph[g] generates a graph with the same degree distribution as graph g.";
-HDegree::usage = "HDegree[g,v] returns the hierarchy degree of vertex v of graph g.";
-HierarchyLevels::usage = "HierarchyLevels[g,n,s] gives a list of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
-HierarchyHistogram::usage = "HierarchyHistogram[g,n,s] gives a histogram of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
-LevelInteractions::usage = "LevelInteractions[g,n,s] gives a level interaction matrix of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
-ResultsIndex::usage = "ResultsIndex[inputdir] searches the directory inputdir for result files and displays the available run results as a table.";
-PrepareRun::usage = "PrepareRun[inputdirs,parameters,runname,nproc,outputdir] prepares a run in the outputdir with the files in inputdirs as input.";
-DomainSizesHistogram::usage = "DomainSizesHistogram[data] returns a log log histogram of domain sizes.";
+generateTopology::usage = "generateTopology[g,w] generates a list whose elements encode edges in directed graph g with weights randomly  picked from list w.";
+topologyList::usage = "topologyList[g,w] generates output of directed graph g with weights w suitable for export to use with CNetwork.";
+encodeGraph::usage = "encodeGraph[] generates a directed graph from the ENCODE consortium.";
+randomIOGraph::usage = "randomIOGraph[g,i] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times.";
+randomAllGraph::usage = "randomAllGraph[g] generates a graph with the same degree distribution as graph g.";
+hDegree::usage = "hDegree[g,v] returns the hierarchy degree of vertex v of graph g.";
+hierarchyLevels::usage = "hierarchyLevels[g,n,s] gives a list of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
+hierarchyHistogram::usage = "hierarchyHistogram[g,n,s] gives a histogram of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
+levelInteractions::usage = "levelInteractions[g,n,s] gives a level interaction matrix of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
+resultsIndex::usage = "resultsIndex[inputdir] searches the directory inputdir for result files and displays the available run results as a table.";
+prepareRun::usage = "prepareRun[inputdirs,parameters,runname,nproc,outputdir] prepares a run in the outputdir with the files in inputdirs as input.";
+domainSizesHistogram::usage = "domainSizesHistogram[data] returns a log log histogram of domain sizes.";
 
 readResult::usage = "readResult[name,inputfile] reads and interprets the inputfile and assigns UpValues (pseudofunctions) to name which allow results to be easily read out.";
 
@@ -45,7 +45,7 @@ fullResultTable::usage = "fullResultTable[inputdir] gives the resultTable of all
 
 Begin["`Private`"]
 
-GenerateTopology[graph_Graph,weights_List]:=
+generateTopology[graph_Graph,weights_List]:=
 	Module[{translationRules},(
 		translationRules=Table[Rule[VertexList[graph][[i]],i],{i,1,VertexCount[graph]}];
 		Table[
@@ -56,13 +56,13 @@ GenerateTopology[graph_Graph,weights_List]:=
 		]
 	)]
 
-TopologyList[graph_Graph,weights_List]:=
+topologyList[graph_Graph,weights_List]:=
 	Module[{output},(
-		output=GenerateTopology[graph,weights];
+		output=generateTopology[graph,weights];
 		PrependTo[output,VertexCount[graph]]
 	)]
 
-EncodeGraph[] :=
+encodeGraph[] :=
 	Module[{encodeData,tfs,encodeEdges},(
 		encodeData=Import["/Users/jelmerderonde/Documents/Code/CNetwork/NETWORKS/ENCODE/enets2.Proximal_filtered.txt",{"Text","Words"}];
 		tfs=Import["/Users/jelmerderonde/Documents/Code/CNetwork/NETWORKS/ENCODE/tfs.txt",{"Text","Words"}];
@@ -70,7 +70,7 @@ EncodeGraph[] :=
 		Graph[Apply[DirectedEdge,encodeEdges,2]]
 	)]
 
-RandomIOGraph[graph_Graph,i_Integer]:=
+randomIOGraph[graph_Graph,i_Integer]:=
 	Module[{newGraph,testEdges},(
 		newGraph=graph;
 		testEdges=Table[EdgeList[newGraph][[RandomInteger[EdgeCount[newGraph]]]],{2}];
@@ -86,16 +86,16 @@ RandomIOGraph[graph_Graph,i_Integer]:=
 		newGraph
 	)]
 
-RandomAllGraph[graph_Graph] :=
+randomAllGraph[graph_Graph] :=
 	Module[{newGraph},(
 		newGraph=Replace[EdgeList[RandomGraph[DegreeGraphDistribution[VertexDegree[graph]]]],UndirectedEdge->DirectedEdge,\[Infinity],Heads->True];
 		Graph[newGraph]
 	)]
 
-HDegree[graph_Graph,v_]:=
+hDegree[graph_Graph,v_]:=
 	(VertexOutDegree[graph,v]-VertexInDegree[graph,v])/(VertexOutDegree[graph,v]+VertexInDegree[graph,v])
 
-HierarchyLevels[graph_Graph,nlevels_Integer,server_String]:=
+hierarchyLevels[graph_Graph,nlevels_Integer,server_String]:=
 	Module[{initialDirectory,serverFolder,levels,tempDir},(
 		tempDir=CreateDirectory[];
 		initialDirectory=Directory[];
@@ -128,10 +128,10 @@ HierarchyLevels[graph_Graph,nlevels_Integer,server_String]:=
 		levels
 	)]
 
-HierarchyHistogram[graph_Graph,nlevels_Integer,server_String,opts:OptionsPattern[]]:=
+hierarchyHistogram[graph_Graph,nlevels_Integer,server_String,opts:OptionsPattern[]]:=
 	Module[{colors,levels,data,h,v,l},(
 		colors={Green,Blue,Red,Purple,Orange,Cyan};
-		levels=HierarchyLevels[graph,nlevels,server];
+		levels=hierarchyLevels[graph,nlevels,server];
 		data=Table[
 			Cases[
 				Table[
@@ -154,9 +154,9 @@ HierarchyHistogram[graph_Graph,nlevels_Integer,server_String,opts:OptionsPattern
 		]
 	)]
 
-LevelInteractions[graph_Graph,nlevels_Integer,server_String,opts:OptionsPattern[]]:=
+levelInteractions[graph_Graph,nlevels_Integer,server_String,opts:OptionsPattern[]]:=
 	Module[{s,levels},(
-		levels=HierarchyLevels[graph,nlevels,server];
+		levels=hierarchyLevels[graph,nlevels,server];
 		s=SparseArray[
 			Apply[Rule,
 				Apply[List,
@@ -170,7 +170,20 @@ LevelInteractions[graph_Graph,nlevels_Integer,server_String,opts:OptionsPattern[
 		]
 	)]
 
-PrepareRun[inputdirs_List,parameters_List,runname_String,nproc_Integer,outputdir_String]:=
+domainSizesHistogram[data_List,opts:OptionsPattern[]]:=
+	Module[{},(
+		Histogram[
+			Log[10,data],
+			{-0.05,5.05,0.1},
+			"LogCount",
+			opts,
+			AxesLabel->{"Basin of attraction", "Number of attractors"},
+			PlotRange->{Automatic,{-1,9}},
+			Ticks->{CustomTicks`LogTicks[0,5],Automatic}
+		]
+)]
+
+prepareRun[inputdirs_List,parameters_List,runname_String,nproc_Integer,outputdir_String]:=
 	Module[{filestocopy,inputfiles,runs},(
 		SetDirectory[outputdir];
 		
@@ -203,7 +216,7 @@ PrepareRun[inputdirs_List,parameters_List,runname_String,nproc_Integer,outputdir
 		
 )]
 
-ResultsIndex[inputdir_String]:=
+resultsIndex[inputdir_String]:=
 	Module[{filenames,datasets,methods,networks,variants,result,x},(
 		filenames=FileNames["result*.txt",inputdir];
 		datasets=Union[Flatten[StringCases[filenames,"~"~~x:RegularExpression["\\D+"]~~__~~".txt"->x]]];
@@ -284,18 +297,6 @@ readResultDirectory[inputdir_String]:=
 		symbolscreated
 	)]
 
-DomainSizesHistogram[data_List,opts:OptionsPattern[]]:=
-	Module[{},(
-		Histogram[
-			Log[10,data],
-			{-0.05,5.05,0.1},
-			"LogCount",
-			opts,
-			AxesLabel->{"Basin of attraction", "Number of attractors"},
-			PlotRange->{Automatic,{-1,9}},
-			Ticks->{CustomTicks`LogTicks[0,5],Automatic}
-		]
-)]
 sortResultSymbols[symbols_List]:=
 	Module[{patterns},(
 		patterns=symbols[[All,2;;4]]//Union;
