@@ -15,6 +15,7 @@ LevelInteractions::usage = "LevelInteractions[g,n,s] gives a level interaction m
 StartRun::usage = "StartRun[inputdirs,parameters,runname,server,nproc] starts a run on a remote server with the files in inputdirs as input.";
 ResultsIndex::usage = "ResultsIndex[inputdir] searches the directory inputdir for result files and displays the available run results as a table.";
 PrepareRun::usage = "PrepareRun[inputdirs,parameters,runname,nproc,outputdir] prepares a run in the outputdir with the files in inputdirs as input.";
+DomainSizesHistogram::usage = "DomainSizesHistogram[data] returns a log log histogram of domain sizes.";
 
 
 Begin["`Private`"]
@@ -243,6 +244,19 @@ ResultsIndex[inputdir_String]:=
 		PrependTo[result,{"#","Dataset","Method","# Networks","# Variants"}];
 		Grid[result,Frame->All]
 	)]
+
+DomainSizesHistogram[data_List,opts:OptionsPattern[]]:=
+	Module[{},(
+		Histogram[
+			Log[10,data],
+			{-0.05,5.05,0.1},
+			"LogCount",
+			opts,
+			AxesLabel->{"Basin of attraction", "Number of attractors"},
+			PlotRange->{Automatic,{-1,9}},
+			Ticks->{CustomTicks`LogTicks[0,5],Automatic}
+		]
+)]
 
 End[]
 
