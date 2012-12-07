@@ -103,7 +103,7 @@ HierarchyLevels[graph_Graph,nlevels_Integer,server_String]:=
 		levels
 	)]
 
-HierarchyHistogram[graph_Graph,nlevels_Integer,server_String]:=
+HierarchyHistogram[graph_Graph,nlevels_Integer,server_String,opts:OptionsPattern[]]:=
 	Module[{colors,levels,data,h,v,l},(
 		colors={Green,Blue,Red,Purple,Orange,Cyan};
 		levels=HierarchyLevels[graph,nlevels,server];
@@ -122,13 +122,14 @@ HierarchyHistogram[graph_Graph,nlevels_Integer,server_String]:=
 		Histogram[
 			data,
 			{-1.1+.2/3,1.1-.2/3,.2/3},
+			opts,
 			ChartStyle->colors,
 			ChartLayout->"Stacked",
 			ChartLegends->ToString/@Range[Max[levels]]
 		]
 	)]
 
-LevelInteractions[graph_Graph,nlevels_Integer,server_String]:=
+LevelInteractions[graph_Graph,nlevels_Integer,server_String,opts:OptionsPattern[]]:=
 	Module[{s,levels},(
 		levels=HierarchyLevels[graph,nlevels,server];
 		s=SparseArray[
@@ -138,6 +139,7 @@ LevelInteractions[graph_Graph,nlevels_Integer,server_String]:=
 			{0\[DirectedEdge]0,_}],2],1]];
 		ArrayPlot[
 			s,
+			opts,
 			Mesh->True,
 			Epilog->{Red,MapIndexed[Text[#1,Reverse[#2-1/2]]&,Reverse[s],{2}]}
 		]
