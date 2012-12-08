@@ -3,8 +3,8 @@
 BeginPackage["CustomGraphFunctions`"];
 
 
-generateTopology::usage = "generateTopology[g] generates a list whose elements encode edges in directed and weigthed graph g.";
-topologyList::usage = "topologyList[g] generates output of weighted directed graph g with suitable for export to use with CNetwork.";
+generateTopology::usage = "generateTopology[g,w] generates a list whose elements encode edges in directed graph g with weights randomly  picked from list w.";
+topologyList::usage = "topologyList[g,w] generates output of directed graph g with weights w suitable for export to use with CNetwork.";
 encodeGraph::usage = "encodeGraph[] generates a directed graph from the ENCODE consortium.";
 randomIOGraph::usage = "randomIOGraph[g,i] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times.";
 randomAllGraph::usage = "randomAllGraph[g] generates a graph with the same degree distribution as graph g.";
@@ -45,28 +45,20 @@ fullResultTable::usage = "fullResultTable[inputdir] gives the resultTable of all
 
 Begin["`Private`"]
 
-generateTopology[graph_Graph]:=
-	Module[{translationRules,output,matrix,weights},(
+generateTopology[graph_Graph,weights_List]:=
+	Module[{translationRules},(
 		translationRules=Table[Rule[VertexList[graph][[i]],i],{i,1,VertexCount[graph]}];
-
-		output=Table[
-			Replace[EdgeList[graph][[i]]/.translationRules,DirectedEdge->List,\[Infinity],Heads->True]
-		,{i,1,EdgeCount[graph]}];
-
-		matrix=WeightedAdjacencyMatrix[graph];
-
-		weights=Table[
-			Part[matrix,output[[i,1]],output[[i,2]]]
-		,{i,1,Length[output]}];
-
-		output=Table[Insert[output[[i]],weights[[i]],2],{i,1,Length[output]}];
-
-		If[WeightedGraphQ[graph],output,"Graph is not weighted"]
+		Table[
+			Insert[
+				Replace[EdgeList[graph][[i]]/.translationRules,DirectedEdge->List,\[Infinity],Heads->True]
+				,RandomChoice[weights],2],
+			{i,1,EdgeCount[graph]}
+		]
 	)]
 
-topologyList[graph_Graph]:=
+topologyList[graph_Graph,weights_List]:=
 	Module[{output},(
-		output=generateTopology[graph];
+		output=generateTopology[graph,weights];
 		PrependTo[output,VertexCount[graph]]
 	)]
 
