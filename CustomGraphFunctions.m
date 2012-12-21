@@ -161,6 +161,7 @@ hierarchyHistogram[graph_Graph,nlevels_Integer,server_String,opts:OptionsPattern
 			data,
 			{-1.1+.2/3,1.1-.2/3,.2/3},
 			opts,
+			PlotRange->{Automatic,{0,30}},
 			ChartStyle->colors,
 			ChartLayout->"Stacked",
 			ChartLegends->ToString/@Range[Max[levels]]
@@ -191,6 +192,7 @@ domainSizesHistogram[data_List,opts:OptionsPattern[]]:=
 			"LogCount",
 			opts,
 			AxesLabel->{"Basin of attraction", "Number of attractors"},
+			AxesOrigin->{-0.05,-1},
 			PlotRange->{Automatic,{-1,9}},
 			Ticks->{CustomTicks`LogTicks[0,5],Automatic}
 		]
