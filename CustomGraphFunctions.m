@@ -36,6 +36,8 @@ attractorLengths::usage = "attractorLengths[result] returns all the cycle length
 domainSizes::usage = "domainSizes[result] returns all the domain sizes of the (non-zero) found attractors.";
 transientLengths::usage = "transientLengths[result] returns all the transients of the (non-zero) found attractors.";
 activeNodeCount::usage = "activeNodeCount[result] the number of nodes that are active in the (non-zero) found attractors.";
+graph::usage = "graph[result] returns the graph of the network used in the run.";
+resultFile::usage = "resultFile[result] returns a string with the location of the inputfile used to create the result.";
 
 readResultDirectory::usage = "readResultDirectory[inputdir] reads all the result files in inputdir, creates symbols for them and returns a list with the symbols.";
 sortResultSymbols::usage = "sortResultSymbols[symbols] works with the output (or a subset of the output) of readResultDirectory and sorts the symbols into lists of the same network.";
@@ -270,6 +272,8 @@ readResult[name_Symbol,inputfile_String]:=
 		domainSizes[name]^=rawdata[[4;;-1,2]];
 		transientLengths[name]^=rawdata[[4;;-1,3]];
 		activeNodeCount[name]^=rawdata[[4;;-1,4]];
+		graph[name]^=generateGraph[topology];
+		resultFile[name]^=inputfile;
 
 		Protect[name];
 		name
