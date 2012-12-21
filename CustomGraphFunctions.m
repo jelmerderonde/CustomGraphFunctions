@@ -14,7 +14,7 @@ hierarchyLevels::usage = "hierarchyLevels[g,n,s] gives a list of n hierarchy lev
 hierarchyHistogram::usage = "hierarchyHistogram[g,n,s] gives a histogram of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
 levelInteractions::usage = "levelInteractions[g,n,s] gives a level interaction matrix of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
 resultsIndex::usage = "resultsIndex[inputdir] searches the directory inputdir for result files and displays the available run results as a table.";
-prepareRun::usage = "prepareRun[inputdirs,parameters,runname,nproc,outputdir] prepares a run in the outputdir with the files in inputdirs as input.";
+prepareRun::usage = "prepareRun[inputdirs,parameters,nproc,outputdir] prepares a run in the outputdir with the files in inputdirs as input.";
 domainSizesHistogram::usage = "domainSizesHistogram[data] returns a log log histogram of domain sizes.";
 
 readResult::usage = "readResult[name,inputfile] reads and interprets the inputfile and assigns UpValues (pseudofunctions) to name which allow results to be easily read out.";
@@ -192,7 +192,7 @@ domainSizesHistogram[data_List,opts:OptionsPattern[]]:=
 		]
 )]
 
-prepareRun[inputdirs_List,parameters_List,runname_String,nproc_Integer,outputdir_String]:=
+prepareRun[inputdirs_List,parameters_List,nproc_Integer,outputdir_String]:=
 	Module[{filestocopy,inputfiles,runs},(
 		SetDirectory[outputdir];
 		
