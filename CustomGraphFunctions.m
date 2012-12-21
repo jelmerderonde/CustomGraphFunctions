@@ -253,11 +253,15 @@ resultsIndex[inputdir_String]:=
 	)]
 
 readResult[name_Symbol,inputfile_String]:=
-	Module[{rawdata,networkname,networkid,variantid},(
+	Module[{rawdata,networkname,networkid,variantid,topology,nedges},(
 		Unprotect[name];
 		ClearAll[name];
 		rawdata=ReadList[inputfile];
 		rawdata=DeleteCases[rawdata,{0,0,{0},0},\[Infinity]];
+
+		nedges=rawdata[[2,2]];
+		topology=rawdata[[1;;3+nedges]];
+		rawdata=Delete[rawdata,Partition[Range[1,3+nedges],1]];
 		
 		networkName[name]^=StringCases[inputfile,__~~"~"~~networkname:RegularExpression["\\D+"]->networkname][[1]];
 		networkID[name]^=StringCases[inputfile,__~~"~"~~RegularExpression["\\D+"]~~networkid:RegularExpression["\\d+"]->networkid][[1]];
