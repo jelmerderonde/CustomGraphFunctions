@@ -275,7 +275,7 @@ readResult[name_Symbol,inputfile_String]:=
 		decayCounter[name]^=rawdata[[2,8]];
 		falseFeedbackQ[name]^=If[rawdata[[2,9]]==1,True,False];
 		attractors[name]^=rawdata[[4;;-1]];
-		attractorCount[name]^=Length[rawdata]-4;
+		attractorCount[name]^=Length[rawdata]-3;
 		attractorLengths[name]^=rawdata[[4;;-1,1]];
 		domainSizes[name]^=rawdata[[4;;-1,2]];
 		transientLengths[name]^=rawdata[[4;;-1,3]];
