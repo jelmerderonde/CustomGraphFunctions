@@ -149,7 +149,7 @@ hierarchyHistogram[graph_Graph,nlevels_Integer,server_String,opts:OptionsPattern
 			Cases[
 				Table[
 					If[VertexDegree[graph][[v]]>0,
-						{HDegree[graph,VertexList[graph][[v]]],levels[[v]]}
+						{hDegree[graph,VertexList[graph][[v]]],levels[[v]]}
 					],
 					{v,1,VertexCount[graph]}],
 				{h_,l}->h
@@ -285,7 +285,7 @@ readResultDirectory[inputdir_String]:=
 	Module[{initialdirectory,datasets,files,symbolscreated,basename},(
 		initialdirectory=Directory[];
 		SetDirectory[inputdir];
-		datasets=ResultsIndex[Directory[]][[1,2;;-1,2]];
+		datasets=resultsIndex[Directory[]][[1,2;;-1,2]];
 		symbolscreated={};
 		
 		Table[
