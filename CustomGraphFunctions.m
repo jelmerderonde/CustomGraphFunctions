@@ -39,9 +39,9 @@ activeNodeCount::usage = "activeNodeCount[result] the number of nodes that are a
 
 readResultDirectory::usage = "readResultDirectory[inputdir] reads all the result files in inputdir, creates symbols for them and returns a list with the symbols.";
 sortResultSymbols::usage = "sortResultSymbols[symbols] works with the output (or a subset of the output) of readResultDirectory and sorts the symbols into lists of the same network.";
-resultRow::usage = "resultRow[symbols] uses a set of result symbols to create a formatted output row of analyzed data";
-resultTable::usage = "resultTable[symbols] creates resultRows of all sets of symbols and displays it in a single grid.";
-fullResultTable::usage = "fullResultTable[inputdir] gives the resultTable of all the files in inputdir. Use with caution!";
+resultRow::usage = "resultRow[symbols,server] uses a set of result symbols to create a formatted output row of analyzed data";
+resultTable::usage = "resultTable[symbols,server] creates resultRows of all sets of symbols and displays it in a single grid.";
+fullResultTable::usage = "fullResultTable[inputdir,server] gives the resultTable of all the files in inputdir. Use with caution!";
 
 
 Begin["`Private`"]
@@ -314,7 +314,7 @@ sortResultSymbols[symbols_List]:=
 		,{i,1,Length[patterns]}]
 	)]
 
-resultRow[symbols_List]:=
+resultRow[symbols_List,server_String]:=
 	Module[{methods,output,methodoutput,methodwidth,header1,header2,methodheader1,methodheader2},(
 		(*Generating a list of methods*)
 		methods=symbols[[All,5;;8]]//Union//Sort;
@@ -400,17 +400,25 @@ resultRow[symbols_List]:=
 		Grid[{header1,header2,output},Frame->All]
 	)]
 
-resultTable[symbols_List]:=
-	Module[{output},(
-		output=resultRow[symbols[[1]]][[1,1;;2]];
-		Table[
-			AppendTo[output,resultRow[symbols[[i]]][[1,3]]];
-		,{i,1,Length[symbols]}];
-		Grid[output,Frame->All]
-	)]
+resultTable[symbols_List,server_String]:=
+	(
+	j=0;
+	Monitor[
+		Module[{output},(
+			output=resultRow[symbols[[1]],server][[1,1;;2]];
+			Table[
+				AppendTo[output,resultRow[symbols[[i]],server][[1,3]]];
+				j=i;
+			,{i,1,Length[symbols]}];
+			Grid[output,Frame->All]
+		)],
+	
+		Column[{Row[{j,"/",Length[symbols]}," "],Row[{ProgressIndicator[j,{0,Length[symbols]}],j/Length[symbols]*100//N,"%"}," "]}]
+	]
+	)
 
-fullResultTable[inputdir_String]:=
-	resultTable[sortResultSymbols[readResultDirectory[inputdir]]]
+fullResultTable[inputdir_String,server_String]:=
+	resultTable[sortResultSymbols[readResultDirectory[inputdir]],server]
 
 End[]
 
