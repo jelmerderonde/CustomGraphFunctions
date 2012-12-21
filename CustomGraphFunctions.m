@@ -99,10 +99,10 @@ randomIOGraph[graph_Graph,max_Integer]:=
 		newGraph
 	)]
 
-randomAllGraph[graph_Graph] :=
+randomAllGraph[graph_Graph,opts:OptionsPattern[]] :=
 	Module[{newGraph},(
 		newGraph=Replace[EdgeList[RandomGraph[DegreeGraphDistribution[VertexDegree[graph]]]],UndirectedEdge->DirectedEdge,\[Infinity],Heads->True];
-		Graph[newGraph]
+		Graph[newGraph,opts]
 	)]
 
 hDegree[graph_Graph,v_]:=
