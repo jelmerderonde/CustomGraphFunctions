@@ -81,18 +81,20 @@ encodeGraph[] :=
 		Graph[Apply[DirectedEdge,encodeEdges,2]]
 	)]
 
-randomIOGraph[graph_Graph,i_Integer]:=
-	Module[{newGraph,testEdges},(
+randomIOGraph[graph_Graph,max_Integer]:=
+	Module[{newGraph,testEdges,i},(
 		newGraph=graph;
-		testEdges=Table[EdgeList[newGraph][[RandomInteger[EdgeCount[newGraph]]]],{2}];
-		Table[
+		i=0;
+		
+		While[i<max,
+			testEdges=Table[EdgeList[newGraph][[RandomInteger[{1,EdgeCount[newGraph]}]]],{2}];
 			If[
 				Length[EdgeList[newGraph,testEdges[[2,1]]\[DirectedEdge]testEdges[[1,2]]]]==Length[EdgeList[newGraph,testEdges[[1,1]]\[DirectedEdge]testEdges[[2,2]]]]==0,
 				
 				newGraph=EdgeDelete[newGraph,testEdges];
 				newGraph=EdgeAdd[newGraph,{testEdges[[2,1]]\[DirectedEdge]testEdges[[1,2]],testEdges[[1,1]]\[DirectedEdge]testEdges[[2,2]]}];
-			];,
-		{i}
+				i++;
+			];
 		];
 		newGraph
 	)]
