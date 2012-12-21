@@ -373,6 +373,9 @@ resultRow[symbols_List,server_String]:=
 			],
 		{i,1,Length[methodoutput]}];
 		
+		(*Adding more general info about the network*)
+		AppendTo[output,hierarchyHistogram[graph[symbols[[1,1]]],3,server,ImageSize->150,Ticks->None,ChartLegends->None]];
+		
 		(*Building the header containg info about the different methods*)
 		header1={"Network",SpanFromLeft,SpanFromLeft,SpanFromLeft};
 
@@ -397,6 +400,8 @@ resultRow[symbols_List,server_String]:=
 			],
 		{i,1,Length[methodheader1]}];
 		
+		AppendTo[header1,"Network hierarchy"];
+		
 		(*Building the header containg the column titles*)
 		header2={"Name","ID","Var","Info"};
 		methodheader2=Table[{"Runinfo","Domain sizes"},{Length[methods]}];
@@ -407,6 +412,9 @@ resultRow[symbols_List,server_String]:=
 				methodheader2[[i]]
 			],
 		{i,1,Length[methodheader2]}];
+		
+		AppendTo[header2,"Hierarchy"];
+
 
 		(*Generating the output grid*)
 		Grid[{header1,header2,output},Frame->All]
