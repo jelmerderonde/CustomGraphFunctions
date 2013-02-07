@@ -63,11 +63,12 @@ topologyList[graph_Graph]:=
 	)]
 
 generateGraph[topology_List]:=
-	Module[{vertices,edges},(
+	Module[{vertices,edges,weights},(
 		vertices=Range[topology[[2,1]]];
 		edges=Replace[#,List->DirectedEdge,Infinity,Heads->True]&/@topology[[4;;-1,{1,3}]];
-
-		Graph[vertices,edges]
+		weights=topology[[4;;-1,2]];
+		
+		Graph[vertices,edges,EdgeWeight->weights]
 	)]
 
 encodeGraph[seed_Integer,w_List] :=
