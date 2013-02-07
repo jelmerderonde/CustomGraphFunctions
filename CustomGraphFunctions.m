@@ -82,21 +82,28 @@ encodeGraph[seed_Integer,w_List] :=
 	)]
 
 randomIOGraph[graph_Graph,max_Integer]:=
-	Module[{newGraph,testEdges,i},(
+	Module[{newGraph,weightMap,testEdges,newMaps,out,i},(
 		newGraph=graph;
+		weightMap=Map[#->PropertyValue[{graph,#},EdgeWeight]&,EdgeList[graph]];
 		i=0;
-		
+
 		While[i<max,
 			testEdges=Table[EdgeList[newGraph][[RandomInteger[{1,EdgeCount[newGraph]}]]],{2}];
 			If[
 				Length[EdgeList[newGraph,testEdges[[2,1]]\[DirectedEdge]testEdges[[1,2]]]]==Length[EdgeList[newGraph,testEdges[[1,1]]\[DirectedEdge]testEdges[[2,2]]]]==0,
-				
+
+				newMaps={testEdges[[2,1]]\[DirectedEdge]testEdges[[1,2]]->testEdges[[2]]/.weightMap,testEdges[[1,1]]\[DirectedEdge]testEdges[[2,2]]->testEdges[[1]]/.weightMap};
+
+				weightMap=DeleteCases[weightMap,testEdges[[1]]->_];
+				weightMap=DeleteCases[weightMap,testEdges[[2]]->_];
+				weightMap=Join[weightMap,newMaps];
+
 				newGraph=EdgeDelete[newGraph,testEdges];
 				newGraph=EdgeAdd[newGraph,{testEdges[[2,1]]\[DirectedEdge]testEdges[[1,2]],testEdges[[1,1]]\[DirectedEdge]testEdges[[2,2]]}];
 				i++;
 			];
 		];
-		newGraph
+		Graph[VertexList[newGraph],EdgeList[newGraph],EdgeWeight->EdgeList[newGraph]/.weightMap]
 	)]
 
 randomAllGraph[graph_Graph,opts:OptionsPattern[]] :=
