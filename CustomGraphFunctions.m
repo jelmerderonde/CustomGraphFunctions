@@ -6,7 +6,7 @@ BeginPackage["CustomGraphFunctions`"];
 generateTopology::usage = "generateTopology[g,w] generates a list whose elements encode edges in directed graph g with weights randomly  picked from list w.";
 topologyList::usage = "topologyList[g,w] generates output of directed graph g with weights w suitable for export to use with CNetwork.";
 generateGraph::usage = "generateGraph[topology] returns a graph based on the topology part of a CNetwork result file.";
-encodeGraph::usage = "encodeGraph[] generates a directed graph from the ENCODE consortium.";
+encodeGraph::usage = "encodeGraph[seed,weights] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w.";
 randomIOGraph::usage = "randomIOGraph[g,i] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times.";
 randomAllGraph::usage = "randomAllGraph[g] generates a graph with the same degree distribution as graph g.";
 hDegree::usage = "hDegree[g,v] returns the hierarchy degree of vertex v of graph g.";
@@ -73,12 +73,14 @@ generateGraph[topology_List]:=
 		Graph[vertices,edges]
 	)]
 
-encodeGraph[] :=
-	Module[{encodeData,tfs,encodeEdges},(
+encodeGraph[seed_Integer,w_List] :=
+	Module[{encodeData,tfs,encodeEdges,weights},(
+		SeedRandom[seed];
+		weights=Table[RandomChoice[w],{323}];
 		encodeData=Import["/Users/jelmerderonde/Documents/Code/CNetwork/NETWORKS/ENCODE/enets2.Proximal_filtered.txt",{"Text","Words"}];
 		tfs=Import["/Users/jelmerderonde/Documents/Code/CNetwork/NETWORKS/ENCODE/tfs.txt",{"Text","Words"}];
 		encodeEdges=Cases[Partition[encodeData,2],{Apply[Alternatives,tfs],Apply[Alternatives,tfs]}];
-		Graph[Apply[DirectedEdge,encodeEdges,2]]
+		Graph[Apply[DirectedEdge,encodeEdges,2],EdgeWeight->weights]
 	)]
 
 randomIOGraph[graph_Graph,max_Integer]:=
