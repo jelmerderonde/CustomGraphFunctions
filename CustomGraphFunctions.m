@@ -3,8 +3,8 @@
 BeginPackage["CustomGraphFunctions`"];
 
 
-topologyList::usage = "topologyList[g,w] generates output of directed graph g with weights w suitable for export to use with CNetwork.";
 generateTopology::usage = "generateTopology[g] generates a list whose elements encode edges in directed graph g with weights";
+topologyList::usage = "topologyList[g] generates output of directed graph g suitable for export to use with CNetwork.";
 generateGraph::usage = "generateGraph[topology] returns a graph based on the topology part of a CNetwork result file.";
 encodeGraph::usage = "encodeGraph[seed,weights] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w.";
 randomIOGraph::usage = "randomIOGraph[g,i] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times.";
@@ -56,9 +56,9 @@ generateTopology[graph_Graph]:=
 		Table[Insert[data[[i,1]],data[[i,2]],2],{i,1,EdgeCount[graph]}]
 	)]
 
-topologyList[graph_Graph,weights_List]:=
+topologyList[graph_Graph]:=
 	Module[{output},(
-		output=generateTopology[graph,weights];
+		output=generateTopology[graph];
 		PrependTo[output,VertexCount[graph]]
 	)]
 
