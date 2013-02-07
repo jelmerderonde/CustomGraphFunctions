@@ -3,8 +3,8 @@
 BeginPackage["CustomGraphFunctions`"];
 
 
-generateTopology::usage = "generateTopology[g,w] generates a list whose elements encode edges in directed graph g with weights randomly  picked from list w.";
 topologyList::usage = "topologyList[g,w] generates output of directed graph g with weights w suitable for export to use with CNetwork.";
+generateTopology::usage = "generateTopology[g] generates a list whose elements encode edges in directed graph g with weights";
 generateGraph::usage = "generateGraph[topology] returns a graph based on the topology part of a CNetwork result file.";
 encodeGraph::usage = "encodeGraph[seed,weights] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w.";
 randomIOGraph::usage = "randomIOGraph[g,i] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times.";
@@ -48,15 +48,12 @@ fullResultTable::usage = "fullResultTable[inputdir,server] gives the resultTable
 
 Begin["`Private`"]
 
-generateTopology[graph_Graph,weights_List]:=
-	Module[{translationRules},(
+generateTopology[graph_Graph]:=
+	Module[{edges,translationRules,data},(
 		translationRules=Table[Rule[VertexList[graph][[i]],i],{i,1,VertexCount[graph]}];
-		Table[
-			Insert[
-				Replace[EdgeList[graph][[i]]/.translationRules,DirectedEdge->List,\[Infinity],Heads->True]
-				,RandomChoice[weights],2],
-			{i,1,EdgeCount[graph]}
-		]
+		edges=Map[#->PropertyValue[{graph,#},EdgeWeight]&,EdgeList[graph]];
+		data=Replace[edges/.translationRules,{DirectedEdge->List,Rule->List},\[Infinity],Heads->True];
+		Table[Insert[data[[i,1]],data[[i,2]],2],{i,1,EdgeCount[graph]}]
 	)]
 
 topologyList[graph_Graph,weights_List]:=
