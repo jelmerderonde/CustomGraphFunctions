@@ -7,7 +7,7 @@ generateTopology::usage = "generateTopology[g] generates a list whose elements e
 topologyList::usage = "topologyList[g] generates output of directed graph g suitable for export to use with CNetwork.";
 generateGraph::usage = "generateGraph[topology] returns a graph based on the topology part of a CNetwork result file.";
 encodeGraph::usage = "encodeGraph[seed,weights] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w.";
-randomIOGraph::usage = "randomIOGraph[g,i,interval,seed] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed.";
+randomIOGraph::usage = "randomIOGraph[g,i,interval,seed,keepselfloops] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed. keepselfsloops is a boolean. If set to Tre, the algorithm will not shuffle self-loops.";
 randomAllGraph::usage = "randomAllGraph[g] generates a graph with the same degree distribution as graph g.";
 hDegree::usage = "hDegree[g,v] returns the hierarchy degree of vertex v of graph g.";
 countSelfLoops::usage = "countSelfLoops[g] returns the number of self loops in graph g.";
@@ -82,7 +82,7 @@ encodeGraph[seed_Integer,w_List] :=
 		Graph[Apply[DirectedEdge,encodeEdges,2],EdgeWeight->weights]
 	)]
 
-randomIOGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer]:=
+randomIOGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer,keepSelfLoops_Symbol]:=
 	Module[{newGraph,weightMap,testEdges,newMaps,out,i,result},(
 		result={};
 		newGraph=graph;
@@ -93,7 +93,8 @@ randomIOGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer]:=
 		While[i<=max,
 			testEdges=Table[EdgeList[newGraph][[RandomInteger[{1,EdgeCount[newGraph]}]]],{2}];
 			If[
-				Length[EdgeList[newGraph,testEdges[[2,1]]\[DirectedEdge]testEdges[[1,2]]]]==Length[EdgeList[newGraph,testEdges[[1,1]]\[DirectedEdge]testEdges[[2,2]]]]==0,
+				Length[EdgeList[newGraph,testEdges[[2,1]]\[DirectedEdge]testEdges[[1,2]]]]==Length[EdgeList[newGraph,testEdges[[1,1]]\[DirectedEdge]testEdges[[2,2]]]]==0 &&
+					If[keepSelfLoops,If[testEdges[[1,1]]!=testEdges[[1,2]] && testEdges[[2,1]]!=testEdges[[2,2]],True,False],True],
 
 				newMaps={testEdges[[2,1]]\[DirectedEdge]testEdges[[1,2]]->testEdges[[2]]/.weightMap,testEdges[[1,1]]\[DirectedEdge]testEdges[[2,2]]->testEdges[[1]]/.weightMap};
 
