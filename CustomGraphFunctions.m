@@ -82,12 +82,13 @@ encodeGraph[seed_Integer,w_List] :=
 		Graph[Apply[DirectedEdge,encodeEdges,2],EdgeWeight->weights]
 	)]
 
-randomIOGraph[graph_Graph,max_Integer,interval_Integer]:=
+randomIOGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer]:=
 	Module[{newGraph,weightMap,testEdges,newMaps,out,i,result},(
 		result={};
 		newGraph=graph;
 		weightMap=Map[#->PropertyValue[{graph,#},EdgeWeight]&,EdgeList[graph]];
 		i=0;
+		SeedRandom[seed];
 
 		While[i<=max,
 			testEdges=Table[EdgeList[newGraph][[RandomInteger[{1,EdgeCount[newGraph]}]]],{2}];
