@@ -7,9 +7,10 @@ generateTopology::usage = "generateTopology[g] generates a list whose elements e
 topologyList::usage = "topologyList[g] generates output of directed graph g suitable for export to use with CNetwork.";
 generateGraph::usage = "generateGraph[topology] returns a graph based on the topology part of a CNetwork result file.";
 encodeGraph::usage = "encodeGraph[seed,weights] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w.";
-randomIOGraph::usage = "randomIOGraph[g,i] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times.";
+randomIOGraph::usage = "randomIOGraph[g,i,interval,seed] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed.";
 randomAllGraph::usage = "randomAllGraph[g] generates a graph with the same degree distribution as graph g.";
 hDegree::usage = "hDegree[g,v] returns the hierarchy degree of vertex v of graph g.";
+countSelfLoops::usage = "countSelfLoops[g] returns the number of self loops in graph g.";
 hierarchyLevels::usage = "hierarchyLevels[g,n,s] gives a list of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
 hierarchyHistogram::usage = "hierarchyHistogram[g,n,s] gives a histogram of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
 levelInteractions::usage = "levelInteractions[g,n,s] gives a level interaction matrix of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
@@ -178,6 +179,11 @@ hierarchyHistogram[graph_Graph,nlevels_Integer,server_String,opts:OptionsPattern
 			ChartLegends->ToString/@Range[Max[levels]]
 		]
 	)]
+
+countSelfLoops[g_Graph]:=
+	Module[{x},
+		Cases[EdgeList[g],x_\[DirectedEdge]x_]//Length
+	]
 
 levelInteractions[graph_Graph,nlevels_Integer,server_String,opts:OptionsPattern[]]:=
 	Module[{s,levels},(
