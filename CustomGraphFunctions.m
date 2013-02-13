@@ -31,7 +31,8 @@ synchronousQ::usage = "synchronousQ[result] returns a boolean whether the run wa
 randomOrderQ::usage = "randomOrderQ[result] returns a boolean whether the update order of the run was random.";
 decayCounter::usage = "decayCounter[result] returns the decay counter.";
 falseFeedbackQ::usage = "falseFeedbackQ[result] returns a boolean whether the false feedback was on in the run.";
-attractors::usage = "attractors[result] returns all (non-zero) found attractors.";
+fullResults::usage = "fullResults[result] returns all (non-zero) found attractors, including statistics.";
+attractors::usage = "attractors[result] returns all (non-zero) found attractor states.";
 attractorCount::usage = "attractorCount[result] returns the number of (non-zero) attractors found.";
 attractorLengths::usage = "attractorLengths[result] returns all the cycle lengths of the (non-zero) found attractors.";
 domainSizes::usage = "domainSizes[result] returns all the domain sizes of the (non-zero) found attractors.";
@@ -272,33 +273,37 @@ resultsIndex[inputdir_String]:=
 	)]
 
 readResult[name_Symbol,inputfile_String]:=
-	Module[{rawdata,networkname,networkid,variantid,topology,nedges},(
+	Module[{rawdata,networkname,networkid,variantid,topology,nedges,attrout},(
 		Unprotect[name];
 		ClearAll[name];
 		rawdata=ReadList[inputfile];
-		rawdata=DeleteCases[rawdata,{0,0,{0},0},\[Infinity]];
+		
 
 		nedges=rawdata[[2,2]];
 		topology=rawdata[[1;;3+nedges]];
 		rawdata=Delete[rawdata,Partition[Range[1,3+nedges],1]];
 		
+		If[Length[rawdata[[3]]]>4,attrout=1,attrout=0];
+		rawdata=DeleteCases[rawdata,If[attrout==1,{0,{},0,{0},0},{0,0,{0},0}],\[Infinity]];
+
 		networkName[name]^=StringCases[inputfile,__~~"~"~~networkname:RegularExpression["\\D+"]->networkname][[1]];
 		networkID[name]^=StringCases[inputfile,__~~"~"~~RegularExpression["\\D+"]~~networkid:RegularExpression["\\d+"]->networkid][[1]];
 		variantID[name]^=StringCases[inputfile,__~~"~"~~RegularExpression["\\D+"]~~RegularExpression["\\d+"]~~"-"~~variantid:RegularExpression["\\d+"]->variantid][[1]];
 		initialStatesCount[name]^=rawdata[[2,2]];
 		vertexCount[name]^=rawdata[[2,4]];
 		edgeCount[name]^=rawdata[[2,5]];
-		convergingStatesRatio[name]^=Total[rawdata[[4;;-1,2]]]/rawdata[[2,2]];
+		convergingStatesRatio[name]^=Total[rawdata[[4;;-1,2+attrout]]]/rawdata[[2,2]];
 		synchronousQ[name]^=If[rawdata[[2,6]]==1,True,False];
 		randomOrderQ[name]^=If[rawdata[[2,7]]==1,True,False];
 		decayCounter[name]^=rawdata[[2,8]];
 		falseFeedbackQ[name]^=If[rawdata[[2,9]]==1,True,False];
-		attractors[name]^=rawdata[[4;;-1]];
+		fullResults[name]^=rawdata[[4;;-1]];
+		If[attrout==1,attractors[name]^=rawdata[[4;;-1,2]]];
 		attractorCount[name]^=Length[rawdata]-3;
 		attractorLengths[name]^=rawdata[[4;;-1,1]];
-		domainSizes[name]^=rawdata[[4;;-1,2]];
-		transientLengths[name]^=rawdata[[4;;-1,3]];
-		activeNodeCount[name]^=rawdata[[4;;-1,4]];
+		domainSizes[name]^=rawdata[[4;;-1,2+attrout]];
+		transientLengths[name]^=rawdata[[4;;-1,3+attrout]];
+		activeNodeCount[name]^=rawdata[[4;;-1,4+attrout]];
 		graph[name]^=generateGraph[topology];
 		resultFile[name]^=inputfile;
 
