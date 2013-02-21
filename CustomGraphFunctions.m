@@ -21,6 +21,7 @@ levelInteractions::usage = "levelInteractions[g,n,s] gives a level interaction m
 resultsIndex::usage = "resultsIndex[inputdir] searches the directory inputdir for result files and displays the available run results as a table.";
 prepareRun::usage = "prepareRun[inputdirs,parameters,nproc,outputdir] prepares a run in the outputdir with the files in inputdirs as input.";
 domainSizesHistogram::usage = "domainSizesHistogram[data] returns a log log histogram of domain sizes.";
+getAttractorProfile::usage = "getAttractorProfile[resultsymbol] returns the attractorProfile of a result symbol.";
 
 readResult::usage = "readResult[name,inputfile] reads and interprets the inputfile and assigns UpValues (pseudofunctions) to name which allow results to be easily read out.";
 
@@ -259,6 +260,21 @@ domainSizesHistogram[data_List,opts:OptionsPattern[]]:=
 			Ticks->{CustomTicks`LogTicks[0,5],Automatic}
 		]
 )]
+
+getAttractorProfile[resultSymbol_Symbol]:=
+	Module[{data,domains,lengths,result},(
+		data=attractors[resultSymbol];
+		domains=domainSizes[resultSymbol];
+		lengths=attractorLengths[resultSymbol];
+		
+		result={};
+		Table[
+			AppendTo[result,domains[[i]]*data[[i]]/lengths[[i]]];
+			,{i,1,Length[data]}
+		];
+
+		Total[Flatten[result,1]]/Table[convergingStatesRatio[resultSymbol]*initialStatesCount[resultSymbol],{vertexCount[resultSymbol]}]
+	)]
 
 prepareRun[inputdirs_List,parameters_List,nproc_Integer,outputdir_String]:=
 	Module[{filestocopy,inputfiles,runs},(
