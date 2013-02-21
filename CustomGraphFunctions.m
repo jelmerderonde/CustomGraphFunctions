@@ -12,6 +12,7 @@ randomAllGraph::usage = "randomAllGraph[g] generates a graph with the same degre
 getSelfLoops::usage = "getSelfLoops[graph] gives a list of {node number, weight} of graph.";
 removeSL::usage = "removeSL[graph] removes self-loops from a graph and returns a new graph.";
 addSL::usage = "addSL[graph,n,seed] adds n new self loops to the graph using seed for randomization and returns the graph.";
+getWeightMap::usage = "getWeightMap[graph] returns the weightmap of a graph.";
 hDegree::usage = "hDegree[g,v] returns the hierarchy degree of vertex v of graph g.";
 countSelfLoops::usage = "countSelfLoops[g] returns the number of self loops in graph g.";
 hierarchyLevels::usage = "hierarchyLevels[g,n,s] gives a list of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
@@ -121,11 +122,14 @@ addSL[graph_Graph,number_Integer,seed_Integer]:=
 		];
 		Graph[vertices,edges,EdgeWeight->edges/.weightMap]
 	)]
+
+getWeightMap[graph_Graph]:=Map[#->PropertyValue[{graph,#},EdgeWeight]&,EdgeList[graph]];
+
 randomIOGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer,keepSelfLoops_Symbol]:=
 	Module[{newGraph,weightMap,testEdges,newMaps,out,i,result},(
 		result={};
 		newGraph=graph;
-		weightMap=Map[#->PropertyValue[{graph,#},EdgeWeight]&,EdgeList[graph]];
+		weightMap=getWeightMap[graph];
 		i=0;
 		SeedRandom[seed];
 
