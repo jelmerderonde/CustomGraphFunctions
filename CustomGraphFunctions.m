@@ -9,6 +9,7 @@ generateGraph::usage = "generateGraph[topology] returns a graph based on the top
 encodeGraph::usage = "encodeGraph[seed,weights] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w.";
 randomIOGraph::usage = "randomIOGraph[g,i,interval,seed,keepselfloops] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed. keepselfsloops is a boolean. If set to Tre, the algorithm will not shuffle self-loops.";
 randomAllGraph::usage = "randomAllGraph[g] generates a graph with the same degree distribution as graph g.";
+getSelfLoops::usage = "getSelfLoops[graph] gives a list of {node number, weight} of graph.";
 addSL::usage = "addSL[graph,n,seed] adds n new self loops to the graph using seed for randomization and returns the graph.";
 hDegree::usage = "hDegree[g,v] returns the hierarchy degree of vertex v of graph g.";
 countSelfLoops::usage = "countSelfLoops[g] returns the number of self loops in graph g.";
@@ -82,6 +83,12 @@ encodeGraph[seed_Integer,w_List] :=
 		tfs=Import["/Users/jelmerderonde/Documents/Code/CNetwork/NETWORKS/ENCODE/tfs.txt",{"Text","Words"}];
 		encodeEdges=Cases[Partition[encodeData,2],{Apply[Alternatives,tfs],Apply[Alternatives,tfs]}];
 		Graph[Apply[DirectedEdge,encodeEdges,2],EdgeWeight->weights]
+	)]
+
+getSelfLoops[graph_Graph]:=
+	Module[{weightMap,x,w},(
+		weightMap=getWeightMap[graph];
+		Cases[weightMap,HoldPattern[x_\[DirectedEdge]x_->w_]->{x,w}]
 	)]
 
 
