@@ -9,6 +9,7 @@ generateGraph::usage = "generateGraph[topology] returns a graph based on the top
 encodeGraph::usage = "encodeGraph[seed,weights] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w.";
 randomIOGraph::usage = "randomIOGraph[g,i,interval,seed,keepselfloops] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed. keepselfsloops is a boolean. If set to Tre, the algorithm will not shuffle self-loops.";
 randomAllGraph::usage = "randomAllGraph[g] generates a graph with the same degree distribution as graph g.";
+addSL::usage = "addSL[graph,n,seed] adds n new self loops to the graph using seed for randomization and returns the graph.";
 hDegree::usage = "hDegree[g,v] returns the hierarchy degree of vertex v of graph g.";
 countSelfLoops::usage = "countSelfLoops[g] returns the number of self loops in graph g.";
 hierarchyLevels::usage = "hierarchyLevels[g,n,s] gives a list of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
@@ -83,6 +84,27 @@ encodeGraph[seed_Integer,w_List] :=
 		Graph[Apply[DirectedEdge,encodeEdges,2],EdgeWeight->weights]
 	)]
 
+
+addSL[graph_Graph,number_Integer,seed_Integer]:=
+	Module[{weightMap,vertices,i,weights,testVertex,edges},(
+		SeedRandom[seed];
+		weightMap=getWeightMap[graph];
+		vertices=VertexList[graph];
+		edges=EdgeList[graph];
+		weights=Union[weightMap[[All,2]]];
+		i=0;
+		
+		While[i<number,
+			testVertex=vertices[[RandomInteger[{1,VertexCount[graph]}]]];
+			If[Length[Cases[edges,testVertex\[DirectedEdge]testVertex]]==0,
+				(*New selfloop doesn't exist yet, lets add it.*)
+				AppendTo[edges,testVertex\[DirectedEdge]testVertex];
+				AppendTo[weightMap,testVertex\[DirectedEdge]testVertex->RandomChoice[weights]];
+				i++;
+			];
+		];
+		Graph[vertices,edges,EdgeWeight->edges/.weightMap]
+	)]
 randomIOGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer,keepSelfLoops_Symbol]:=
 	Module[{newGraph,weightMap,testEdges,newMaps,out,i,result},(
 		result={};
