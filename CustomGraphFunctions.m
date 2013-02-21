@@ -8,11 +8,11 @@ topologyList::usage = "topologyList[g] generates output of directed graph g suit
 generateGraph::usage = "generateGraph[topology] returns a graph based on the topology part of a CNetwork result file.";
 encodeGraph::usage = "encodeGraph[seed,weights] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w.";
 randomIOGraph::usage = "randomIOGraph[g,i,interval,seed,keepselfloops] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed. keepselfsloops is a boolean. If set to Tre, the algorithm will not shuffle self-loops.";
-randomAllGraph::usage = "randomAllGraph[g] generates a graph with the same degree distribution as graph g.";
 getSelfLoops::usage = "getSelfLoops[graph] gives a list of {node number, weight} of graph.";
 removeSL::usage = "removeSL[graph] removes self-loops from a graph and returns a new graph.";
 addSL::usage = "addSL[graph,n,seed] adds n new self loops to the graph using seed for randomization and returns the graph.";
 getWeightMap::usage = "getWeightMap[graph] returns the weightmap of a graph.";
+randomAllGraph::usage = "randomAllGraph[g,i,interval,seed,keepselfloops] generates a random graph from graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed. keepselfsloops is a boolean. If set to True, the algorithm will not shuffle self-loops.";
 hDegree::usage = "hDegree[g,v] returns the hierarchy degree of vertex v of graph g.";
 countSelfLoops::usage = "countSelfLoops[g] returns the number of self loops in graph g.";
 hierarchyLevels::usage = "hierarchyLevels[g,n,s] gives a list of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
@@ -157,10 +157,36 @@ randomIOGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer,keepSelfLoop
 		result
 	)]
 
-randomAllGraph[graph_Graph,opts:OptionsPattern[]] :=
-	Module[{newGraph},(
-		newGraph=Replace[EdgeList[RandomGraph[DegreeGraphDistribution[VertexDegree[graph]]]],UndirectedEdge->DirectedEdge,\[Infinity],Heads->True];
-		Graph[newGraph,opts]
+RandomAllGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer,keepSelfLoops_Symbol]:=
+	Module[{newGraph,weightMap,testEdges,newEdges,newMaps,out,i,result},(
+		result={};
+		newGraph=graph;
+		weightMap=getWeightMap[graph];
+		i=0;
+		SeedRandom[seed];
+
+		While[i<=max,
+			testEdges=Table[RandomChoice[EdgeList[newGraph]],{2}];
+			newEdges=Table[RandomChoice[VertexList[newGraph]]\[DirectedEdge]RandomChoice[VertexList[newGraph]],{2}];
+			If[
+				Length[Union[testEdges]] == Length[Union[newEdges]] == 2 && Length[EdgeList[newGraph,newEdges[[1]]]] == Length[EdgeList[newGraph,newEdges[[2]]]] == 0 &&
+					If[keepSelfLoops,If[testEdges[[1,1]]!=testEdges[[1,2]] && testEdges[[2,1]]!=testEdges[[2,2]],True,False],True],
+
+				newMaps={newEdges[[1]]->testEdges[[1]]/.weightMap,newEdges[[2]]->testEdges[[2]]/.weightMap};
+
+				weightMap=DeleteCases[weightMap,testEdges[[1]]->_];
+				weightMap=DeleteCases[weightMap,testEdges[[2]]->_];
+				weightMap=Join[weightMap,newMaps];
+
+				newGraph=EdgeDelete[newGraph,testEdges];
+				newGraph=EdgeAdd[newGraph,newEdges];
+				i++;
+				If[Mod[i,interval]==0,
+					AppendTo[result,Graph[VertexList[newGraph],EdgeList[newGraph],EdgeWeight->EdgeList[newGraph]/.weightMap]];
+				];
+			];
+		];
+		result
 	)]
 
 hDegree[graph_Graph,v_]:=
