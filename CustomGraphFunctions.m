@@ -12,6 +12,7 @@ removeSL::usage = "removeSL[graph] removes self-loops from a graph and returns a
 addSL::usage = "addSL[graph,n,seed] adds n new self loops to the graph using seed for randomization and returns the graph.";
 getWeightMap::usage = "getWeightMap[graph] returns the weightmap of a graph.";
 randomIOGraph::usage = "randomIOGraph[g,i,interval,seed,keepselfloops] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed. keepselfsloops is a boolean. If set to True, the algorithm will not shuffle self-loops.";
+randomVDGraph::usage = "randomVDGraph[g,i,interval,seed,keepselfloops] generates a random graph with the same total degree distribution as graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed. keepselfsloops is a boolean. If set to True, the algorithm will not shuffle self-loops.";
 randomAllGraph::usage = "randomAllGraph[g,i,interval,seed,keepselfloops] generates a random graph from graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed. keepselfsloops is a boolean. If set to True, the algorithm will not shuffle self-loops.";
 hDegree::usage = "hDegree[g,v] returns the hierarchy degree of vertex v of graph g.";
 countSelfLoops::usage = "countSelfLoops[g] returns the number of self loops in graph g.";
@@ -148,6 +149,37 @@ randomIOGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer,keepSelfLoop
 
 				newGraph=EdgeDelete[newGraph,testEdges];
 				newGraph=EdgeAdd[newGraph,{testEdges[[2,1]]\[DirectedEdge]testEdges[[1,2]],testEdges[[1,1]]\[DirectedEdge]testEdges[[2,2]]}];
+				i++;
+				If[Mod[i,interval]==0,
+					AppendTo[result,Graph[VertexList[newGraph],EdgeList[newGraph],EdgeWeight->EdgeList[newGraph]/.weightMap]];
+				];
+			];
+		];
+		result
+	)]
+
+RandomVDGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer,keepSelfLoops_Symbol]:=
+	Module[{newGraph,weightMap,testEdges,newMaps,out,i,result},(
+		result={};
+		newGraph=graph;
+		weightMap=getWeightMap[graph];
+		i=0;
+		SeedRandom[seed];
+
+		While[i<=max,
+			testEdges=Table[RandomChoice[EdgeList[newGraph]],{2}];
+			If[
+				Length[EdgeList[newGraph,testEdges[[2,2]]\[DirectedEdge]testEdges[[1,2]]]]==Length[EdgeList[newGraph,testEdges[[2,1]]\[DirectedEdge]testEdges[[1,1]]]]==0 && Length[Union[testEdges]]==2 &&
+					If[keepSelfLoops,If[testEdges[[1,1]]!=testEdges[[1,2]] && testEdges[[2,1]]!=testEdges[[2,2]],True,False],True],
+
+				newMaps={testEdges[[2,2]]\[DirectedEdge]testEdges[[1,2]]->testEdges[[1]]/.weightMap,testEdges[[2,1]]\[DirectedEdge]testEdges[[1,1]]->testEdges[[2]]/.weightMap};
+
+				weightMap=DeleteCases[weightMap,testEdges[[1]]->_];
+				weightMap=DeleteCases[weightMap,testEdges[[2]]->_];
+				weightMap=Join[weightMap,newMaps];
+
+				newGraph=EdgeDelete[newGraph,testEdges];
+				newGraph=EdgeAdd[newGraph,{testEdges[[2,2]]\[DirectedEdge]testEdges[[1,2]],testEdges[[2,1]]\[DirectedEdge]testEdges[[1,1]]}];
 				i++;
 				If[Mod[i,interval]==0,
 					AppendTo[result,Graph[VertexList[newGraph],EdgeList[newGraph],EdgeWeight->EdgeList[newGraph]/.weightMap]];
