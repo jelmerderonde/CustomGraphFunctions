@@ -10,6 +10,7 @@ encodeGraph::usage = "encodeGraph[seed,weights] generates a directed graph from 
 randomIOGraph::usage = "randomIOGraph[g,i,interval,seed,keepselfloops] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed. keepselfsloops is a boolean. If set to Tre, the algorithm will not shuffle self-loops.";
 randomAllGraph::usage = "randomAllGraph[g] generates a graph with the same degree distribution as graph g.";
 getSelfLoops::usage = "getSelfLoops[graph] gives a list of {node number, weight} of graph.";
+removeSL::usage = "removeSL[graph] removes self-loops from a graph and returns a new graph.";
 addSL::usage = "addSL[graph,n,seed] adds n new self loops to the graph using seed for randomization and returns the graph.";
 hDegree::usage = "hDegree[g,v] returns the hierarchy degree of vertex v of graph g.";
 countSelfLoops::usage = "countSelfLoops[g] returns the number of self loops in graph g.";
@@ -91,6 +92,14 @@ getSelfLoops[graph_Graph]:=
 		Cases[weightMap,HoldPattern[x_\[DirectedEdge]x_->w_]->{x,w}]
 	)]
 
+removeSL[graph_]:=
+	Module[{vertices,weightMap,newMap},(
+		vertices=VertexList[graph];
+		weightMap=Map[#->PropertyValue[{graph,#},EdgeWeight]&,EdgeList[graph]];
+		newMap=DeleteCases[weightMap,Rule[x_\[DirectedEdge]x_,_]];
+		
+		Graph[vertices,newMap[[All,1]],EdgeWeight->newMap[[All,1]]/.newMap]
+	)]
 
 addSL[graph_Graph,number_Integer,seed_Integer]:=
 	Module[{weightMap,vertices,i,weights,testVertex,edges},(
