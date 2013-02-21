@@ -138,37 +138,6 @@ randomIOGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer,keepSelfLoop
 		While[i<=max,
 			testEdges=Table[RandomChoice[EdgeList[newGraph]],{2}];
 			If[
-				Length[EdgeList[newGraph,testEdges[[2,1]]\[DirectedEdge]testEdges[[1,2]]]]==Length[EdgeList[newGraph,testEdges[[1,1]]\[DirectedEdge]testEdges[[2,2]]]]==0 && Length[Union[testEdges]]==2 &&
-					If[keepSelfLoops,If[testEdges[[1,1]]!=testEdges[[1,2]] && testEdges[[2,1]]!=testEdges[[2,2]],True,False],True],
-
-				newMaps={testEdges[[2,1]]\[DirectedEdge]testEdges[[1,2]]->testEdges[[2]]/.weightMap,testEdges[[1,1]]\[DirectedEdge]testEdges[[2,2]]->testEdges[[1]]/.weightMap};
-
-				weightMap=DeleteCases[weightMap,testEdges[[1]]->_];
-				weightMap=DeleteCases[weightMap,testEdges[[2]]->_];
-				weightMap=Join[weightMap,newMaps];
-
-				newGraph=EdgeDelete[newGraph,testEdges];
-				newGraph=EdgeAdd[newGraph,{testEdges[[2,1]]\[DirectedEdge]testEdges[[1,2]],testEdges[[1,1]]\[DirectedEdge]testEdges[[2,2]]}];
-				i++;
-				If[Mod[i,interval]==0,
-					AppendTo[result,Graph[VertexList[newGraph],EdgeList[newGraph],EdgeWeight->EdgeList[newGraph]/.weightMap]];
-				];
-			];
-		];
-		result
-	)]
-
-RandomVDGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer,keepSelfLoops_Symbol]:=
-	Module[{newGraph,weightMap,testEdges,newMaps,out,i,result},(
-		result={};
-		newGraph=graph;
-		weightMap=getWeightMap[graph];
-		i=0;
-		SeedRandom[seed];
-
-		While[i<=max,
-			testEdges=Table[RandomChoice[EdgeList[newGraph]],{2}];
-			If[
 				Length[EdgeList[newGraph,testEdges[[2,2]]\[DirectedEdge]testEdges[[1,2]]]]==Length[EdgeList[newGraph,testEdges[[2,1]]\[DirectedEdge]testEdges[[1,1]]]]==0 && Length[Union[testEdges]]==2 &&
 					If[keepSelfLoops,If[testEdges[[1,1]]!=testEdges[[1,2]] && testEdges[[2,1]]!=testEdges[[2,2]],True,False],True],
 
@@ -189,7 +158,41 @@ RandomVDGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer,keepSelfLoop
 		result
 	)]
 
-RandomAllGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer,keepSelfLoops_Symbol]:=
+randomVDGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer,keepSelfLoops_Symbol]:=
+	Module[{newGraph,weightMap,testEdges,newMaps,out,i,x,result,dSLCounter},(
+		result={};
+		newGraph=graph;
+		weightMap=getWeightMap[graph];
+		i=0;
+		dSLCounter=0;
+		SeedRandom[seed];
+
+		While[i<=max,
+			testEdges=Table[RandomChoice[EdgeList[newGraph]],{2}];
+			If[
+				Length[EdgeList[newGraph,testEdges[[2,2]]\[DirectedEdge]testEdges[[1,2]]]]==Length[EdgeList[newGraph,testEdges[[2,1]]\[DirectedEdge]testEdges[[1,1]]]]==0 && Length[Union[testEdges]]==2 &&
+					If[keepSelfLoops,If[testEdges[[1,1]]!=testEdges[[1,2]] && testEdges[[2,1]]!=testEdges[[2,2]],True,False],True] &&
+					If[Length[Cases[testEdges,x_\[DirectedEdge]x_]]==2,dSLCounter++;False,True],
+
+				newMaps={testEdges[[2,2]]\[DirectedEdge]testEdges[[1,2]]->testEdges[[1]]/.weightMap,testEdges[[2,1]]\[DirectedEdge]testEdges[[1,1]]->testEdges[[2]]/.weightMap};
+
+				weightMap=DeleteCases[weightMap,testEdges[[1]]->_];
+				weightMap=DeleteCases[weightMap,testEdges[[2]]->_];
+				weightMap=Join[weightMap,newMaps];
+
+				newGraph=EdgeDelete[newGraph,testEdges];
+				newGraph=EdgeAdd[newGraph,{testEdges[[2,2]]\[DirectedEdge]testEdges[[1,2]],testEdges[[2,1]]\[DirectedEdge]testEdges[[1,1]]}];
+				i++;
+				If[Mod[i,interval]==0,
+					AppendTo[result,Graph[VertexList[newGraph],EdgeList[newGraph],EdgeWeight->EdgeList[newGraph]/.weightMap]];
+				];
+			];
+		];
+		Print[dSLCounter];
+		result
+	)]
+
+randomAllGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer,keepSelfLoops_Symbol]:=
 	Module[{newGraph,weightMap,testEdges,newEdges,newMaps,out,i,result},(
 		result={};
 		newGraph=graph;
