@@ -231,7 +231,7 @@ hierarchyLevels[graph_Graph,nlevels_Integer,server_String]:=
 	Module[{initialDirectory,serverFolder,levels,tempDir},(
 		tempDir=CreateDirectory[];
 		initialDirectory=Directory[];
-		serverFolder=server<>":Project/Main/Matlab/Automated/";
+		serverFolder=server<>":Project/Code/Matlab/Automated/";
 		
 		SetDirectory[tempDir];
 		
