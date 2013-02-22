@@ -324,7 +324,7 @@ domainSizesHistogram[data_List,opts:OptionsPattern[]]:=
 
 getAttractorProfile[resultSymbol_Symbol]:=
 	Module[{data,domains,lengths,result},(
-		data=attractors[resultSymbol];
+		data=ToExpression/@Characters[attractors[resultSymbol]];
 		domains=domainSizes[resultSymbol];
 		lengths=attractorLengths[resultSymbol];
 		
@@ -417,7 +417,7 @@ readResult[name_Symbol,inputfile_String]:=
 		decayCounter[name]^=rawdata[[2,8]];
 		falseFeedbackQ[name]^=If[rawdata[[2,9]]==1,True,False];
 		fullResults[name]^=rawdata[[4;;-1]];
-		If[attrout==1,attractors[name]^=ToExpression/@Characters[rawdata[[4;;-1,2]]]];
+		If[attrout==1,attractors[name]^=rawdata[[4;;-1,2]]];
 		attractorCount[name]^=Length[rawdata]-3;
 		attractorLengths[name]^=rawdata[[4;;-1,1]];
 		domainSizes[name]^=rawdata[[4;;-1,2+attrout]];
