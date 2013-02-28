@@ -390,7 +390,7 @@ prepareRun[inputdirs_List,parameters_List,nproc_Integer,outputdir_String]:=
 
 		Export["run.sh",
 			Table[
-				"screen -d -m "<>ToString[i]<>".sh"
+				"screen -d -m ./"<>ToString[i]<>".sh"
 			,{i,1,Length[runs]}]
 		,"Text"];
 		
