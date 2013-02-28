@@ -8,8 +8,8 @@ topologyList::usage = "topologyList[g] generates output of directed graph g suit
 generateGraph::usage = "generateGraph[topology] returns a graph based on the topology part of a CNetwork result file.";
 encodeGraph::usage = "encodeGraph[seed,weights] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w.";
 getSelfLoops::usage = "getSelfLoops[graph] gives a list of {node number, weight} of graph.";
-addSL::usage = "addSL[graph,n,seed] adds n new self loops to the graph using seed for randomization and returns the graph.";
 removeSL::usage = "removeSL[graph, seed] removes self-loops from a graph by intelligent reshuffling using seed for randomization and returns a new graph.";
+addSL::usage = "addSL[graph,n,seed] adds n new self loops to the graph by intelligent reshuffling using seed for randomization and returns the graph.";
 getWeightMap::usage = "getWeightMap[graph] returns the weightmap of a graph.";
 randomIOGraph::usage = "randomIOGraph[g,i,interval,seed,keepselfloops] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed. keepselfsloops is a boolean. If set to True, the algorithm will not shuffle self-loops.";
 randomVDGraph::usage = "randomVDGraph[g,i,interval,seed,keepselfloops] generates a random graph with the same total degree distribution as graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed. keepselfsloops is a boolean. If set to True, the algorithm will not shuffle self-loops.";
@@ -152,24 +152,50 @@ removeSLNew[graph_Graph,seed_Integer]:=
 	)]
 
 addSL[graph_Graph,number_Integer,seed_Integer]:=
-	Module[{weightMap,vertices,i,weights,testVertex,edges},(
+	Module[{weightMap,vertices,edges,i,testVertex,randomInEdge,randomOutEdge,inWeight,outWeight},(
 		SeedRandom[seed];
 		weightMap=getWeightMap[graph];
 		vertices=VertexList[graph];
 		edges=EdgeList[graph];
-		weights=Union[weightMap[[All,2]]];
 		i=0;
-		
+
 		While[i<number,
-			testVertex=vertices[[RandomInteger[{1,VertexCount[graph]}]]];
-			If[Length[Cases[edges,testVertex\[DirectedEdge]testVertex]]==0,
-				(*New selfloop doesn't exist yet, lets add it.*)
-				AppendTo[edges,testVertex\[DirectedEdge]testVertex];
-				AppendTo[weightMap,testVertex\[DirectedEdge]testVertex->RandomChoice[weights]];
-				i++;
+			testVertex=RandomChoice[vertices];
+
+			If[VertexInDegree[graph,testVertex]>0&&VertexOutDegree[graph,testVertex]>0&&Length[Cases[edges,testVertex\[DirectedEdge]testVertex]]==0,
+				(*We have found a suitable vertex, let's create the selfloop.*)
+				
+				(*Pick the edges we are going to change*)
+				randomInEdge=RandomChoice[Cases[edges,_\[DirectedEdge]testVertex]];
+				randomOutEdge=RandomChoice[Cases[edges,testVertex\[DirectedEdge]_]];
+				
+				(*Check if the new edge already exists*)
+				If[Length[Cases[edges,randomInEdge[[1]]\[DirectedEdge]randomOutEdge[[2]]]]==0,
+					
+					(*Add the new edges*)
+					AppendTo[edges,randomInEdge[[1]]\[DirectedEdge]randomOutEdge[[2]]];
+					AppendTo[edges,randomOutEdge[[1]]\[DirectedEdge]randomInEdge[[2]]];
+					
+					(*Remove the old edges*)
+					edges=DeleteCases[edges,randomInEdge];
+					edges=DeleteCases[edges,randomOutEdge];
+					
+					(*Alter the weightMap*)
+					inWeight=randomInEdge/.weightMap;
+					outWeight=randomOutEdge/.weightMap;
+
+					AppendTo[weightMap,randomInEdge[[1]]\[DirectedEdge]randomOutEdge[[2]]->inWeight];
+					AppendTo[weightMap,randomOutEdge[[1]]\[DirectedEdge]randomInEdge[[2]]->outWeight];
+					weightMap=DeleteCases[weightMap,randomInEdge->_];
+					weightMap=DeleteCases[weightMap,randomOutEdge->_];
+
+					i++
+				];
 			];
 		];
-		Graph[vertices,edges,EdgeWeight->edges/.weightMap]
+	
+	Graph[vertices,edges,EdgeWeight->edges/.weightMap]
+	
 	)]
 
 getWeightMap[graph_Graph]:=Map[#->PropertyValue[{graph,#},EdgeWeight]&,EdgeList[graph]];
