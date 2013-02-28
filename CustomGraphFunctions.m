@@ -23,6 +23,7 @@ resultsIndex::usage = "resultsIndex[inputdir] searches the directory inputdir fo
 prepareRun::usage = "prepareRun[inputdirs,parameters,nproc,outputdir] prepares a run in the outputdir with the files in inputdirs as input.";
 domainSizesHistogram::usage = "domainSizesHistogram[data] returns a log log histogram of domain sizes.";
 getAttractorProfile::usage = "getAttractorProfile[resultsymbol] returns the attractorProfile of a result symbol.";
+attractorHistogram::usage = "attractorHistogram[symbol,opts] returns a histogram with the ratio of active nodes on horizontal axis and the frequency of attractors on vertical.";
 
 readResult::usage = "readResult[name,inputfile] reads and interprets the inputfile and assigns UpValues (pseudofunctions) to name which allow results to be easily read out.";
 
@@ -338,6 +339,28 @@ getAttractorProfile[resultSymbol_Symbol]:=
 		];
 
 		Total[Flatten[result,1]]/Table[convergingStatesRatio[resultSymbol]*initialStatesCount[resultSymbol],{vertexCount[resultSymbol]}]
+	)]
+
+attractorHistogram[symbol_Symbol,opts:OptionsPattern[]]:=
+	Module[{data,nStates,count,i,result},(
+		data=attractors[symbol];
+		nStates=data[[1,1]]//Characters//Length;
+		count=attractorCount[symbol];
+
+		result=Table[
+			Total[Flatten[ToExpression/@Characters[data[[i]]]]]/Length[data[[i]]]/nStates
+			,{i,1,count}
+		];
+
+		Histogram[
+			result,
+			{-0.005,1.005,0.01},
+			opts,
+			ImageSize->800,
+			PlotLabel->ToString[count]<>" attractors",
+			PlotRange->{{-0.005,1.0},Automatic},
+			AxesOrigin->{-0.005,0}
+		]
 	)]
 
 prepareRun[inputdirs_List,parameters_List,nproc_Integer,outputdir_String]:=
