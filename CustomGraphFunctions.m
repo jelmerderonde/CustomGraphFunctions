@@ -8,8 +8,8 @@ topologyList::usage = "topologyList[g] generates output of directed graph g suit
 generateGraph::usage = "generateGraph[topology] returns a graph based on the topology part of a CNetwork result file.";
 encodeGraph::usage = "encodeGraph[seed,weights] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w.";
 getSelfLoops::usage = "getSelfLoops[graph] gives a list of {node number, weight} of graph.";
-removeSL::usage = "removeSL[graph] removes self-loops from a graph and returns a new graph.";
 addSL::usage = "addSL[graph,n,seed] adds n new self loops to the graph using seed for randomization and returns the graph.";
+removeSL::usage = "removeSL[graph, seed] removes self-loops from a graph by intelligent reshuffling using seed for randomization and returns a new graph.";
 getWeightMap::usage = "getWeightMap[graph] returns the weightmap of a graph.";
 randomIOGraph::usage = "randomIOGraph[g,i,interval,seed,keepselfloops] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed. keepselfsloops is a boolean. If set to True, the algorithm will not shuffle self-loops.";
 randomVDGraph::usage = "randomVDGraph[g,i,interval,seed,keepselfloops] generates a random graph with the same total degree distribution as graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed. keepselfsloops is a boolean. If set to True, the algorithm will not shuffle self-loops.";
@@ -96,13 +96,59 @@ getSelfLoops[graph_Graph]:=
 		Cases[weightMap,HoldPattern[x_\[DirectedEdge]x_->w_]->{x,w}]
 	)]
 
-removeSL[graph_]:=
-	Module[{vertices,weightMap,newMap},(
+removeSLNew[graph_Graph,seed_Integer]:=
+	Module[{vertices,weightMap,edges,selfLoopVertices,v,succes,testVertex,testEdge,selfLoopWeight,testEdgeWeight},(
+		SeedRandom[seed];
 		vertices=VertexList[graph];
-		weightMap=Map[#->PropertyValue[{graph,#},EdgeWeight]&,EdgeList[graph]];
-		newMap=DeleteCases[weightMap,Rule[x_\[DirectedEdge]x_,_]];
+		weightMap=getWeightMap[graph];
+		edges=EdgeList[graph];
 		
-		Graph[vertices,newMap[[All,1]],EdgeWeight->newMap[[All,1]]/.newMap]
+		selfLoopVertices=Cases[edges,v_\[DirectedEdge]v_->v];
+
+		(*Process all selfLoopVertices*)
+		Table[
+			
+			succes=False;
+
+			While[succes==False,
+				testVertex=RandomChoice[vertices];
+
+				(*Check if we have picked a valid testVertex to shift edges with*)
+				If[testVertex!=v&&VertexInDegree[graph,testVertex]>0&&Length[Cases[edges,v\[DirectedEdge]testVertex]]==0,
+					
+					(*Pick one of the edges going into the testVertex to shift it to v*)
+					testEdge=RandomChoice[Cases[edges,_\[DirectedEdge]testVertex]];
+					
+					(*Check if the new edge we want to make already exists and if we haven't picked another self loop*)
+					If[Length[Cases[edges,testEdge[[1]]\[DirectedEdge]v]]==0 &&testEdge[[1]]!=testEdge[[2]],
+						
+						(*Add the new edges*)
+						AppendTo[edges,v\[DirectedEdge]testVertex];
+						AppendTo[edges,testEdge[[1]]\[DirectedEdge]v];
+						
+						(*Remove the old edges*)
+						edges=DeleteCases[edges,v\[DirectedEdge]v];
+						edges=DeleteCases[edges,testEdge];
+						
+						(*Alter the weightMap*)
+						selfLoopWeight=v\[DirectedEdge]v/.weightMap;
+						testEdgeWeight=testEdge/.weightMap;
+						
+						AppendTo[weightMap,v\[DirectedEdge]testVertex->selfLoopWeight];
+						AppendTo[weightMap,testEdge[[1]]\[DirectedEdge]v->testEdgeWeight];
+						weightMap=DeleteCases[weightMap,v\[DirectedEdge]v->_];
+						weightMap=DeleteCases[weightMap,testEdge->_];
+						
+						(*Set the succes flag*)
+						succes=True;
+					];
+				];
+			];
+			,{v,selfLoopVertices}
+		];
+		
+		Graph[vertices,edges,EdgeWeight->edges/.weightMap]
+		
 	)]
 
 addSL[graph_Graph,number_Integer,seed_Integer]:=
