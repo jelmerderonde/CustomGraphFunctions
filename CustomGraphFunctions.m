@@ -6,7 +6,7 @@ BeginPackage["CustomGraphFunctions`"];
 generateTopology::usage = "generateTopology[g] generates a list whose elements encode edges in directed graph g with weights";
 topologyList::usage = "topologyList[g] generates output of directed graph g suitable for export to use with CNetwork.";
 generateGraph::usage = "generateGraph[topology] returns a graph based on the topology part of a CNetwork result file.";
-encodeGraph::usage = "encodeGraph[seed,weights] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w.";
+encodeGraph::usage = "encodeGraph[seed,weights,omit] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w. Omit is an optional boolean that determines wheter the floating vertex will be deleted. Its default is True.";
 getSelfLoops::usage = "getSelfLoops[graph] gives a list of {node number, weight} of graph.";
 removeSL::usage = "removeSL[graph, seed] removes self-loops from a graph by intelligent reshuffling using seed for randomization and returns a new graph.";
 addSL::usage = "addSL[graph,n,seed] adds n new self loops to the graph by intelligent reshuffling using seed for randomization and returns the graph.";
@@ -80,14 +80,29 @@ generateGraph[topology_List]:=
 		Graph[vertices,edges,EdgeWeight->weights]
 	)]
 
-encodeGraph[seed_Integer,w_List] :=
-	Module[{encodeData,tfs,encodeEdges,weights},(
+regenerateGraph[topology_List]:=
+	Module[{vertices,edges,weights},(
+		vertices=Range[topology[[1,1]]];
+		edges=Replace[#,List->DirectedEdge,Infinity,Heads->True]&/@topology[[2;;-1,{1,3}]];
+		weights=topology[[2;;-1,2]];
+		
+		Graph[vertices,edges,EdgeWeight->weights]
+	)]
+
+encodeGraph[seed_Integer,w_List,omit_Symbol:True] :=
+	Module[{encodeData,tfs,encodeEdges,weights,g},(
 		SeedRandom[seed];
 		weights=Table[RandomChoice[w],{323}];
 		encodeData=Import["/Users/jelmerderonde/Documents/Code/CNetwork/NETWORKS/ENCODE/enets2.Proximal_filtered.txt",{"Text","Words"}];
 		tfs=Import["/Users/jelmerderonde/Documents/Code/CNetwork/NETWORKS/ENCODE/tfs.txt",{"Text","Words"}];
 		encodeEdges=Cases[Partition[encodeData,2],{Apply[Alternatives,tfs],Apply[Alternatives,tfs]}];
-		Graph[Apply[DirectedEdge,encodeEdges,2],EdgeWeight->weights]
+		
+		g=Graph[Apply[DirectedEdge,encodeEdges,2],EdgeWeight->weights];
+		If[omit,
+			VertexDelete[g,"ESRRA"],
+			g
+		]
+	)]
 	)]
 
 getSelfLoops[graph_Graph]:=
