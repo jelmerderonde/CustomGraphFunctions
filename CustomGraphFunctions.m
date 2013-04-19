@@ -372,25 +372,55 @@ hierarchyLevels[graph_Graph,nlevels_Integer,server_String]:=
 		DeleteDirectory[tempDir,DeleteContents->True];
 		SetDirectory[initialDirectory];
 		
-		levels
+		Partition[Riffle[VertexList[graph],levels],2]
 	)]
 
 hierarchyHistogram[graph_Graph,nlevels_Integer,server_String,opts:OptionsPattern[]]:=
-	Module[{colors,levels,data,h,v,l},(
+	Module[{colors,levels,data,h,v,l,x,i,j,hDegrees,slIndeces,slVertices,binLists,slBinList,slLevelVertices,slLevelList,labeler},(
 		colors={Green,Blue,Red,Purple,Orange,Cyan};
-		levels=hierarchyLevels[graph,nlevels,server];
+		levels=hierarchyLevels[graph,nlevels,server][[All,2]];
 		data=Table[
 			Cases[
 				Table[
 					If[VertexDegree[graph][[v]]>0,
 						{hDegree[graph,VertexList[graph][[v]]],levels[[v]]}
-					],
-					{v,1,VertexCount[graph]}],
-				{h_,l}->h
-			],
+					]
+				,{v,1,VertexCount[graph]}]
+			,{h_,l}->h],
 			{l,Range[Max[levels]]}
 		];
-		
+
+		(*Counting the self loops*)
+		hDegrees=hDegree[graph,#]&/@VertexList[graph];
+		slIndeces=VertexIndex[graph,#]&/@Cases[EdgeList[graph],x_\[DirectedEdge]x_->x];
+		slVertices=Table[
+			{
+				hDegrees[[i]],
+				If[MemberQ[slIndeces,i],1,0]
+			}
+		,{i,1,VertexCount[graph]}];
+		binLists=BinLists[slVertices[[All,1]],{-1.1+.2/3,1.1-.2/3,.2/3}];
+		slBinList=Total/@DeleteCases[
+			Table[
+				Table[
+					If[MemberQ[binLists[[i]],slVertices[[j,1]]],slVertices[[j,2]]]
+				,{j,1,Length[slVertices]}]
+			,{i,1,Length[binLists]}],Null,\[Infinity]];
+
+		slLevelVertices=Table[
+			{
+				levels[[i]],
+				If[MemberQ[slIndeces,i],1,0]
+			}
+		,{i,1,VertexCount[graph]}];
+		slLevelList=Total/@DeleteCases[Table[
+			Table[
+				If[slLevelVertices[[j,1]]==i,slLevelVertices[[j,2]]]
+			,{j,1,Length[slLevelVertices]}]
+		,{i,Range[Max[levels]]}],Null,\[Infinity]];
+
+		labeler[v_,{i_,j_},{ri_,cj_}]:=Placed[Join[ri,cj,{If[slBinList[[j]]>0&&i==Max[levels],slBinList[[j]],Null]}],Above,Column];
+
 		Histogram[
 			data,
 			{-1.1+.2/3,1.1-.2/3,.2/3},
@@ -398,7 +428,9 @@ hierarchyHistogram[graph_Graph,nlevels_Integer,server_String,opts:OptionsPattern
 			PlotRange->{Automatic,{0,30}},
 			ChartStyle->colors,
 			ChartLayout->"Stacked",
-			ChartLegends->ToString/@Range[Max[levels]]
+			ChartLegends->Table["Level "<>ToString[i]<>" ("<>ToString[slLevelList[[i]]]<> " SL's)"<>If[i==1," (bottom)",If[i==Max[levels]," (top)",""]],{i,Range[Max[levels]]}],
+			LabelingFunction->labeler,
+			PlotLabel->"# Selfloops: "<>StringJoin[Table[ToString[slLevelList[[i]]]<>If[i==Length[slLevelList],""," | "],{i,1,Length[slLevelList]}]]
 		]
 	)]
 
