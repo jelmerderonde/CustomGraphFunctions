@@ -129,7 +129,7 @@ getSelfLoops[graph_Graph]:=
 		Cases[weightMap,HoldPattern[x_\[DirectedEdge]x_->w_]->{x,w}]
 	)]
 
-removeSLNew[graph_Graph,seed_Integer]:=
+removeSL[graph_Graph,seed_Integer]:=
 	Module[{vertices,weightMap,edges,selfLoopVertices,v,succes,testVertex,testEdge,selfLoopWeight,testEdgeWeight},(
 		SeedRandom[seed];
 		vertices=VertexList[graph];
