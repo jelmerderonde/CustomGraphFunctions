@@ -6,6 +6,7 @@ BeginPackage["CustomGraphFunctions`"];
 generateTopology::usage = "generateTopology[g] generates a list whose elements encode edges in directed graph g with weights";
 topologyList::usage = "topologyList[g] generates output of directed graph g suitable for export to use with CNetwork.";
 generateGraph::usage = "generateGraph[topology] returns a graph based on the topology part of a CNetwork result file.";
+regenerateGraph::usage = "regenerateGraph[topology]returns a graph based on an imported topology file. (Import[\"file.txt\",\"Data\"]).";
 encodeGraph::usage = "encodeGraph[seed,weights,omit] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w. Omit is an optional boolean that determines wheter the floating vertex will be deleted. Its default is True.";
 getSelfLoops::usage = "getSelfLoops[graph] gives a list of {node number, weight} of graph.";
 removeSL::usage = "removeSL[graph, seed] removes self-loops from a graph by intelligent reshuffling using seed for randomization and returns a new graph.";
