@@ -9,6 +9,7 @@ generateGraph::usage = "generateGraph[topology] returns a graph based on the top
 regenerateGraph::usage = "regenerateGraph[topology]returns a graph based on an imported topology file. (Import[\"file.txt\",\"Data\"]).";
 encodeGraph::usage = "encodeGraph[seed,weights,omit] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w. Omit is an optional boolean that determines wheter the floating vertex will be deleted. Its default is True.";
 getSelfLoops::usage = "getSelfLoops[graph] gives a list of {node number, weight} of graph.";
+weightDistGraph::usage = "weightDistGraph[graph,{actRatio,reprRatio,randRatio},seed] assigns new weights to edges. The second argument determines the ratio of activating, repressing and mixed vertices..";
 removeSL::usage = "removeSL[graph, seed] removes self-loops from a graph by intelligent reshuffling using seed for randomization and returns a new graph.";
 addSL::usage = "addSL[graph,n,seed] adds n new self loops to the graph by intelligent reshuffling using seed for randomization and returns the graph.";
 getWeightMap::usage = "getWeightMap[graph] returns the weightmap of a graph.";
@@ -104,6 +105,22 @@ encodeGraph[seed_Integer,w_List,omit_Symbol:True] :=
 			g
 		]
 	)]
+
+weightDistGraph[graph_Graph,{actRatio_,reprRatio_,randRatio_},seed_Integer]:=
+	Module[{vertices,edges,vertexMap,weightMap,i},(
+		vertices=VertexList[graph];
+		edges=EdgeList[graph];
+		SeedRandom[seed];
+
+		vertexMap=Table[
+			vertices[[i]]->RandomChoice[{actRatio,reprRatio,randRatio}->{100,-100,Hold[RandomChoice[{100,-100}]]}]
+		,{i,1,Length[vertices]}];
+
+		weightMap=Table[
+			ReleaseHold[edges[[i]]->Evaluate[edges[[i,1]]/.vertexMap]]
+		,{i,1,Length[edges]}];
+
+		Graph[vertices,edges,EdgeWeight->edges/.weightMap]
 	)]
 
 getSelfLoops[graph_Graph]:=
