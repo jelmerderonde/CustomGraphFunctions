@@ -334,7 +334,13 @@ randomAllGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer,keepSelfLoo
 	)]
 
 hDegree[graph_Graph,v_]:=
-	(VertexOutDegree[graph,v]-VertexInDegree[graph,v])/(VertexOutDegree[graph,v]+VertexInDegree[graph,v])
+	Module[{},(
+		If[VertexDegree[graph,v]>0,
+			(VertexOutDegree[graph,v]-VertexInDegree[graph,v])/(VertexOutDegree[graph,v]+VertexInDegree[graph,v]),
+			0
+		]
+	)]
+	
 
 hierarchyLevels[graph_Graph,nlevels_Integer,server_String]:=
 	Module[{initialDirectory,serverFolder,levels,tempDir},(
