@@ -13,6 +13,7 @@ getSelfLoops::usage = "getSelfLoops[graph] gives a list of {node number, weight}
 weightDistGraph::usage = "weightDistGraph[graph,{actRatio,reprRatio,randRatio},seed] assigns new weights to edges. The second argument determines the ratio of activating, repressing and mixed vertices..";
 removeSL::usage = "removeSL[graph, seed] removes self-loops from a graph by intelligent reshuffling using seed for randomization and returns a new graph.";
 addSL::usage = "addSL[graph,n,seed] adds n new self loops to the graph by intelligent reshuffling using seed for randomization and returns the graph.";
+addSpecificSL::usage = "addSpecificSL[graph, vertex, weight], adds a selfloop to vertex in graph with weight. Only if it doesn' exist yet.";
 getWeightMap::usage = "getWeightMap[graph] returns the weightmap of a graph.";
 randomIOGraph::usage = "randomIOGraph[g,i,interval,seed,keepselfloops] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed. keepselfsloops is a boolean. If set to True, the algorithm will not shuffle self-loops.";
 randomVDGraph::usage = "randomVDGraph[g,i,interval,seed,keepselfloops] generates a random graph with the same total degree distribution as graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed. keepselfsloops is a boolean. If set to True, the algorithm will not shuffle self-loops.";
@@ -256,6 +257,23 @@ addSL[graph_Graph,number_Integer,seed_Integer]:=
 	Graph[vertices,edges,EdgeWeight->edges/.weightMap]
 	
 	)]
+
+addSpecificSL[graph_Graph,vertex_,weight_Integer]:=
+	Module[{vertices,edges,weightMap},
+		vertices=VertexList[graph];
+		edges=EdgeList[graph];
+		weightMap=getWeightMap[graph];
+		
+		(*Check if vertex already has a self loop*)
+		If[Length[Cases[edges,vertex\[DirectedEdge]vertex,\[Infinity]]]==0,
+			
+			AppendTo[edges,vertex\[DirectedEdge]vertex];
+			AppendTo[weightMap,vertex\[DirectedEdge]vertex->weight];
+			
+		];
+		
+		Graph[vertices,edges,EdgeWeight->edges/.weightMap]
+	]
 
 getWeightMap[graph_Graph]:=Map[#->PropertyValue[{graph,#},EdgeWeight]&,EdgeList[graph]];
 
