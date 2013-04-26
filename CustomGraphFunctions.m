@@ -8,6 +8,7 @@ topologyList::usage = "topologyList[g] generates output of directed graph g suit
 generateGraph::usage = "generateGraph[topology] returns a graph based on the topology part of a CNetwork result file.";
 regenerateGraph::usage = "regenerateGraph[topology]returns a graph based on an imported topology file. (Import[\"file.txt\",\"Data\"]).";
 encodeGraph::usage = "encodeGraph[seed,weights,omit] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w. Omit is an optional boolean that determines wheter the floating vertex will be deleted. Its default is True.";
+fullEncodeGraph::usage = "fullEncodeGraph[seed,weights,omit] generates a directed graph from the ENCODE consortium using the full proximal and distal network. Weights are randomly picked from list weights. Omit is an optional boolean that determines wheter the loose vertices should be omitted. Its default is True.";
 getSelfLoops::usage = "getSelfLoops[graph] gives a list of {node number, weight} of graph.";
 weightDistGraph::usage = "weightDistGraph[graph,{actRatio,reprRatio,randRatio},seed] assigns new weights to edges. The second argument determines the ratio of activating, repressing and mixed vertices..";
 removeSL::usage = "removeSL[graph, seed] removes self-loops from a graph by intelligent reshuffling using seed for randomization and returns a new graph.";
@@ -106,6 +107,30 @@ encodeGraph[seed_Integer,w_List,omit_Symbol:True] :=
 			g
 		]
 	)]
+
+fullEncodeGraph[seed_Integer,w_List,omit_Symbol:True] :=
+	Module[{g,gg,data,weights,vertices,edges},(
+		SeedRandom[seed];
+		data=Join[Partition[Import["/Users/jelmerderonde/Documents/Code/CNetwork/NETWORKS/ENCODE/enets2.Proximal_filtered.txt",{"Text","Words"}],3][[All,{1,3}]],Partition[Import["/Users/jelmerderonde/Documents/Code/CNetwork/NETWORKS/ENCODE/enets3.Distal.txt",{"Text","Words"}],3][[All,{1,3}]]];
+		data=DeleteDuplicates[data];
+		weights=Table[RandomChoice[w],{Length[data]}];		
+		
+		g=Graph[DirectedEdge@@@data,EdgeWeight->weights];
+		
+		If[omit,
+			(
+				gg=Subgraph[g,WeaklyConnectedComponents[g][[1]]];
+				edges=EdgeList[gg];
+				vertices=VertexList[gg];
+				
+				Graph[vertices,edges,EdgeWeight->Table[RandomChoice[w],{Length[edges]}]]
+			),
+			g
+		]
+		
+	)]
+
+
 
 weightDistGraph[graph_Graph,{actRatio_,reprRatio_,randRatio_},seed_Integer]:=
 	Module[{vertices,edges,vertexMap,weightMap,i},(
