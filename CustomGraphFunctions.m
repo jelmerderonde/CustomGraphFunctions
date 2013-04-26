@@ -26,6 +26,7 @@ prepareRun::usage = "prepareRun[inputdirs,parameters,nproc,outputdir] prepares a
 domainSizesHistogram::usage = "domainSizesHistogram[data] returns a log log histogram of domain sizes.";
 getAttractorProfile::usage = "getAttractorProfile[resultsymbol] returns the attractorProfile of a result symbol.";
 attractorHistogram::usage = "attractorHistogram[symbols,opts] returns a histogram with the ratio of active nodes on horizontal axis and the frequency of attractors on vertical. Only accepts a list of 1 or more result symbols.";
+createAttractorGraph::usage ="createAttractorGraph[attractor] creates an attractor graph from attractor strings saved in a result.";
 
 readResult::usage = "readResult[name,inputfile] reads and interprets the inputfile and assigns UpValues (pseudofunctions) to name which allow results to be easily read out.";
 
@@ -482,6 +483,17 @@ getAttractorProfile[resultSymbol_Symbol]:=
 		];
 
 		Total[Flatten[result,1]]/Table[convergingStatesRatio[resultSymbol]*initialStatesCount[resultSymbol],{vertexCount[resultSymbol]}]
+	)]
+
+createAttractorGraph[attractorList_List]:=
+	Module[{edges,beginPoint,endPoint},(
+		edges=Table[
+			beginPoint=i;
+			endPoint=If[i+1>Length[attractorList],1,i+1];
+			attractorList[[beginPoint]]\[DirectedEdge]attractorList[[endPoint]]
+			,{i,1,Length[attractorList]}
+		];
+		Graph[Sort[edges]]
 	)]
 
 attractorHistogram[symbols_List,opts:OptionsPattern[]]:=
