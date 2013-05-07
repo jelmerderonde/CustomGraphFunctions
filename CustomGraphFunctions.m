@@ -3,6 +3,7 @@
 BeginPackage["CustomGraphFunctions`"];
 
 
+ai::usage "ai[], gives a lists of mutants (and mediator) with load";
 generateTopology::usage = "generateTopology[g] generates a list whose elements encode edges in directed graph g with weights";
 topologyList::usage = "topologyList[g] generates output of directed graph g suitable for export to use with CNetwork.";
 generateGraph::usage = "generateGraph[topology] returns a graph based on the topology part of a CNetwork result file.";
@@ -61,6 +62,21 @@ fullResultTable::usage = "fullResultTable[inputdir,server] gives the resultTable
 
 
 Begin["`Private`"]
+
+ai[]:=
+	Module[{data,cleandata,list,table},(
+		data=Import["!ssh binftunnel ai","Table"];
+		list=Table["mutant"<>ToString[i],{i,1,40}]; AppendTo[list,"mediator"];
+		cleandata=Cases[data,{load_,nproc_,name_,_,_,_,_,user_}->{ToExpression[load]/ToExpression[nproc],name,ToExpression[load],ToExpression[nproc],user}];
+		cleandata=Sort[Cases[cleandata,{_,Alternatives@@list,_,_,_}]];
+		
+		table=Table[
+			{cleandata[[i,2]],ProgressIndicator[cleandata[[i,3]],{0,cleandata[[i,4]]}],If[IntegerPart[cleandata[[i,4]]-cleandata[[i,3]]]<0,0,IntegerPart[cleandata[[i,4]]-cleandata[[i,3]]]],cleandata[[i,5]]}
+		,{i,1,Length[cleandata]}];
+
+		PrependTo[table,{"Computer","Load","Free","User"}];
+		Grid[table,Frame->All]
+	)]
 
 generateTopology[graph_Graph]:=
 	Module[{edges,translationRules,data},(
