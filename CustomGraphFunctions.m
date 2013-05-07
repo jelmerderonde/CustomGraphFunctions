@@ -23,6 +23,7 @@ hDegree::usage = "hDegree[g,v] returns the hierarchy degree of vertex v of graph
 countSelfLoops::usage = "countSelfLoops[g] returns the number of self loops in graph g.";
 hierarchyLevels::usage = "hierarchyLevels[g,n,s] gives a list of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
 hierarchyHistogram::usage = "hierarchyHistogram[g,n,s] gives a histogram of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
+degreeHistogram::usage = "degreeHistogram[graph, type, options] gives a histogram of the vertexdegree's of graph. Type can be \"In\", \"Out\" or \"All\".";
 levelInteractions::usage = "levelInteractions[g,n,s] gives a level interaction matrix of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
 resultsIndex::usage = "resultsIndex[inputdir] searches the directory inputdir for result files and displays the available run results as a table.";
 prepareRun::usage = "prepareRun[inputdirs,parameters,nproc,outputdir] prepares a run in the outputdir with the files in inputdirs as input.";
@@ -491,6 +492,35 @@ hierarchyHistogram[graph_Graph,nlevels_Integer,server_String,opts:OptionsPattern
 			ChartLegends->Table["Level "<>ToString[i]<>" ("<>ToString[slLevelList[[i]]]<> " SL's)"<>If[i==1," (bottom)",If[i==Max[levels]," (top)",""]],{i,Range[Max[levels]]}],
 			LabelingFunction->labeler,
 			PlotLabel->"# Selfloops: "<>StringJoin[Table[ToString[slLevelList[[i]]]<>If[i==Length[slLevelList],""," | "],{i,1,Length[slLevelList]}]]
+		]
+	)]
+
+degreeHistogram[graph_Graph,type_String,opts:OptionsPattern[]]:=
+	Module[{function,data,sl,rest,max},(
+		Switch[type,
+			"In",function=VertexInDegree,
+			"Out",function=VertexOutDegree,
+			"All",function=VertexDegree
+		];
+
+		sl=getSelfLoops[graph][[All,1]];
+		rest=Select[VertexList[graph],!MemberQ[sl,#]&];
+		data={function[g,#]&/@sl,function[g,#]&/@rest};
+
+		max=Max[Flatten[data]];
+
+		Histogram[
+			data,
+			{-.5,max+1.5,1},
+			opts,
+			ChartLayout->"Stacked",
+			AxesLabel->{"Degree","Frequency"},
+			PlotLabel->Switch[type,
+				"In","In degree",
+				"Out","Out degree",
+				"All", "Total degree"
+			],
+			ChartLegends->Placed[{"Selfloops","Normal"},Bottom]
 		]
 	)]
 
