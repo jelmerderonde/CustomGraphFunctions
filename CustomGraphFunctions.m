@@ -13,6 +13,7 @@ fullEncodeGraph::usage = "fullEncodeGraph[seed,weights,omit] generates a directe
 getSelfLoops::usage = "getSelfLoops[graph] gives a list of {node number, weight} of graph.";
 weightDistGraph::usage = "weightDistGraph[graph,{actRatio,reprRatio,randRatio},seed] assigns new weights to edges. The second argument determines the ratio of activating, repressing and mixed vertices..";
 removeSL::usage = "removeSL[graph, seed] removes self-loops from a graph by intelligent reshuffling using seed for randomization and returns a new graph.";
+bruteRemoveSL::usage = "bruteRemoveSL[graph] removes all self-loops from a graph. Nothing intelligent about it.";
 addSL::usage = "addSL[graph,n,seed] adds n new self loops to the graph by intelligent reshuffling using seed for randomization and returns the graph.";
 addSpecificSL::usage = "addSpecificSL[graph, vertex, weight], adds a selfloop to vertex in graph with weight. Only if it doesn' exist yet.";
 getWeightMap::usage = "getWeightMap[graph] returns the weightmap of a graph.";
@@ -226,6 +227,18 @@ removeSL[graph_Graph,seed_Integer]:=
 		
 		Graph[vertices,edges,EdgeWeight->edges/.weightMap]
 		
+	)]
+
+bruteRemoveSL[graph_Graph]:=
+	Module[{vertices,edges,weightMap},(
+		vertices=VertexList[graph];
+		edges=EdgeList[graph];
+		weightMap=getWeightMap[graph];
+		
+		edges=DeleteCases[edges,x_\[DirectedEdge]x_];
+		weightMap=DeleteCases[weightMap,x_\[DirectedEdge]x_->_];
+		
+		Graph[vertices,edges,EdgeWeight->edges/.weightMap]
 	)]
 
 addSL[graph_Graph,number_Integer,seed_Integer]:=
