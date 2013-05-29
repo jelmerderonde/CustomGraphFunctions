@@ -259,27 +259,31 @@ addSL[graph_Graph,number_Integer,seed_Integer]:=
 				randomInEdge=RandomChoice[Cases[edges,_\[DirectedEdge]testVertex]];
 				randomOutEdge=RandomChoice[Cases[edges,testVertex\[DirectedEdge]_]];
 				
-				(*Check if the new edge already exists*)
-				If[Length[Cases[edges,randomInEdge[[1]]\[DirectedEdge]randomOutEdge[[2]]]]==0,
+				(*Check if we have suitable random edges*)
+				If[randomInEdge[[1]]!=randomOutEdge[[2]],
 					
-					(*Add the new edges*)
-					AppendTo[edges,randomInEdge[[1]]\[DirectedEdge]randomOutEdge[[2]]];
-					AppendTo[edges,randomOutEdge[[1]]\[DirectedEdge]randomInEdge[[2]]];
-					
-					(*Remove the old edges*)
-					edges=DeleteCases[edges,randomInEdge];
-					edges=DeleteCases[edges,randomOutEdge];
-					
-					(*Alter the weightMap*)
-					inWeight=randomInEdge/.weightMap;
-					outWeight=randomOutEdge/.weightMap;
-
-					AppendTo[weightMap,randomInEdge[[1]]\[DirectedEdge]randomOutEdge[[2]]->inWeight];
-					AppendTo[weightMap,randomOutEdge[[1]]\[DirectedEdge]randomInEdge[[2]]->outWeight];
-					weightMap=DeleteCases[weightMap,randomInEdge->_];
-					weightMap=DeleteCases[weightMap,randomOutEdge->_];
-
-					i++
+					(*Check if the new edge already exists*)
+					If[Length[Cases[edges,randomInEdge[[1]]\[DirectedEdge]randomOutEdge[[2]]]]==0,
+						
+						(*Add the new edges*)
+						AppendTo[edges,randomInEdge[[1]]\[DirectedEdge]randomOutEdge[[2]]];
+						AppendTo[edges,randomOutEdge[[1]]\[DirectedEdge]randomInEdge[[2]]];
+						
+						(*Remove the old edges*)
+						edges=DeleteCases[edges,randomInEdge];
+						edges=DeleteCases[edges,randomOutEdge];
+						
+						(*Alter the weightMap*)
+						inWeight=randomInEdge/.weightMap;
+						outWeight=randomOutEdge/.weightMap;
+						
+						AppendTo[weightMap,randomInEdge[[1]]\[DirectedEdge]randomOutEdge[[2]]->inWeight];
+						AppendTo[weightMap,randomOutEdge[[1]]\[DirectedEdge]randomInEdge[[2]]->outWeight];
+						weightMap=DeleteCases[weightMap,randomInEdge->_];
+						weightMap=DeleteCases[weightMap,randomOutEdge->_];
+						
+						i++
+					];
 				];
 			];
 		];
