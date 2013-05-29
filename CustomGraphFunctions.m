@@ -505,7 +505,7 @@ degreeHistogram[graph_Graph,type_String,opts:OptionsPattern[]]:=
 
 		sl=getSelfLoops[graph][[All,1]];
 		rest=Select[VertexList[graph],!MemberQ[sl,#]&];
-		data={function[g,#]&/@sl,function[g,#]&/@rest};
+		data={function[graph,#]&/@sl,function[graph,#]&/@rest};
 
 		max=Max[Flatten[data]];
 
