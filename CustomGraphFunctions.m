@@ -66,8 +66,9 @@ fullResultTable::usage = "fullResultTable[inputdir,server] gives the resultTable
 Begin["`Private`"]
 
 ai[]:=
-	Module[{data,cleandata,list,table},(
-		data=Import["!ssh binftunnel ai","Table"];
+	Module[{data,hostname,cleandata,list,table},(
+		hostname=If[$MachineName=="mediator","mediator","binftunnel"];
+		data=Import["!ssh "<>hostname<>" ai","Table"];
 		list=Table["mutant"<>ToString[i],{i,1,40}]; AppendTo[list,"mediator"];
 		cleandata=Cases[data,{_,load_,nproc_,name_,_,_,_,user_}->{ToExpression[load]/ToExpression[nproc],name,ToExpression[load],ToExpression[nproc],user}];
 		cleandata=Sort[Cases[cleandata,{_,Alternatives@@list,_,_,_}]];
