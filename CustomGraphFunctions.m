@@ -117,8 +117,14 @@ encodeGraph[seed_Integer,w_List,omit_Symbol:True] :=
 	Module[{encodeData,tfs,encodeEdges,weights,g},(
 		SeedRandom[seed];
 		weights=Table[RandomChoice[w],{323}];
-		encodeData=Import["/Users/jelmerderonde/Documents/Code/CNetwork/NETWORKS/ENCODE/enets2.Proximal_filtered.txt",{"Text","Words"}];
-		tfs=Import["/Users/jelmerderonde/Documents/Code/CNetwork/NETWORKS/ENCODE/tfs.txt",{"Text","Words"}];
+		If[$MachineName=="mediator",
+			(
+				encodeData=Import["~Project/Code/Mathematica/enets2.Proximal_filtered.txt",{"Text","Words"}];
+				tfs=Import["~Project/Code/Mathematica/tfs.txt",{"Text","Words"}];
+			), (
+				encodeData=Import["/Users/jelmerderonde/Documents/Code/CNetwork/NETWORKS/ENCODE/enets2.Proximal_filtered.txt",{"Text","Words"}];
+				tfs=Import["/Users/jelmerderonde/Documents/Code/CNetwork/NETWORKS/ENCODE/tfs.txt",{"Text","Words"}];
+			)];
 		encodeEdges=Cases[Partition[encodeData,2],{Apply[Alternatives,tfs],Apply[Alternatives,tfs]}];
 		
 		g=Graph[Apply[DirectedEdge,encodeEdges,2],EdgeWeight->weights];
