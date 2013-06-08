@@ -9,6 +9,7 @@ topologyList::usage = "topologyList[g] generates output of directed graph g suit
 generateGraph::usage = "generateGraph[topology] returns a graph based on the topology part of a CNetwork result file.";
 regenerateGraph::usage = "regenerateGraph[topology]returns a graph based on an imported topology file. (Import[\"file.txt\",\"Data\"]).";
 encodeGraph::usage = "encodeGraph[seed,weights,omit] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w. Omit is an optional boolean that determines wheter the floating vertex will be deleted. Its default is True.";
+newEncodeGraph::usagge = " newEncodeGraph[seed] generates a directed graph from the ENCODE consortium and uses seed to generate random weights for unknown edges/vertices. All the weights for know edges are already filled in. Nodes that both repress and activate have a 50/50 ratio of outgoing edges. Unknown nodes are randomly given a category (+,-,+-)";
 fullEncodeGraph::usage = "fullEncodeGraph[seed,weights,omit] generates a directed graph from the ENCODE consortium using the full proximal and distal network. Weights are randomly picked from list weights. Omit is an optional boolean that determines wheter the loose vertices should be omitted. Its default is True.";
 getSelfLoops::usage = "getSelfLoops[graph] gives a list of {node number, weight} of graph.";
 weightDistGraph::usage = "weightDistGraph[graph,{actRatio,reprRatio,randRatio},seed] assigns new weights to edges. The second argument determines the ratio of activating, repressing and mixed vertices..";
@@ -129,6 +130,39 @@ encodeGraph[seed_Integer,w_List,omit_Symbol:True] :=
 			VertexDelete[g,"ESRRA"],
 			g
 		]
+	)]
+
+newEncodeGraph[seed_]:=
+	Module[{prefix,encodeData,tfData,encodeEdges,weights,unknownVertices,edge},(
+		SeedRandom[seed];
+		prefix=If[$MachineName=="mediator","~/Project/Code/Mathematica/","/Users/jelmerderonde/Documents/01 - Active Projects/Research project 2/Data/ENCODE/"];
+		
+		encodeData=DeleteCases[Import[prefix<>"enets2.Proximal_filtered.txt","Table"],{}];
+		tfData=Import[prefix<>"tfstatus.txt","Table"];
+		
+		encodeEdges=DirectedEdge@@@Cases[encodeData,{Alternatives@@tfData[[All,1]],Alternatives@@tfData[[All,1]]}];
+		unknownVertices={};
+		
+		weights=Table[
+			Switch[Cases[tfData,{edge[[1]],status_}->status][[1]],
+				"+",100,
+				"-",-100,
+				"+-",RandomChoice[{-100,100}],
+				"?",If[MemberQ[unknownVertices[[All,1]],edge[[1]]],
+					Switch[Cases[unknownVertices,{edge[[1]],status_}->status][[1]],
+						"+",100,
+						"-",-100,
+						"+-",RandomChoice[{-100,100}]],
+					(AppendTo[unknownVertices,{edge[[1]],RandomChoice[{"+","-","+-"}]}];
+					Switch[Cases[unknownVertices,{edge[[1]],status_}->status][[1]],
+						"+",100,
+						"-",-100,
+						"+-",RandomChoice[{-100,100}]])
+					]
+				]
+			,{edge,encodeEdges}];
+		
+		Graph[encodeEdges,EdgeWeight->weights]
 	)]
 
 fullEncodeGraph[seed_Integer,w_List,omit_Symbol:True] :=
