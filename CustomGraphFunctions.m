@@ -379,7 +379,7 @@ randomIOGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer,keepSelfLoop
 				];
 			];
 		];
-		Print[dSLCounter];
+		(*Print[dSLCounter];*)
 		result
 	)]
 
@@ -413,7 +413,7 @@ randomVDGraph[graph_Graph,max_Integer,interval_Integer,seed_Integer,keepSelfLoop
 				];
 			];
 		];
-		Print[dSLCounter];
+		(*Print[dSLCounter];*)
 		result
 	)]
 
