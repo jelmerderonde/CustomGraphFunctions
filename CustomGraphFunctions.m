@@ -149,17 +149,17 @@ newEncodeGraph[seed_]:=
 				"-",-100,
 				"+-",RandomChoice[{-100,100}],
 				"?",If[MemberQ[unknownVertices[[All,1]],edge[[1]]],
-					Switch[Cases[unknownVertices,{edge[[1]],status_}->status][[1]],
-						"+",100,
-						"-",-100,
-						"+-",RandomChoice[{-100,100}]],
-					(AppendTo[unknownVertices,{edge[[1]],RandomChoice[{"+","-","+-"}]}];
-					Switch[Cases[unknownVertices,{edge[[1]],status_}->status][[1]],
-						"+",100,
-						"-",-100,
-						"+-",RandomChoice[{-100,100}]])
+						Switch[Cases[unknownVertices,{edge[[1]],status_}->status][[1]],
+							"+",100,
+							"-",-100,
+							"+-",RandomChoice[{-100,100}]],
+						(AppendTo[unknownVertices,{edge[[1]],RandomChoice[{"+","-","+-"}]}];
+						Switch[Cases[unknownVertices,{edge[[1]],status_}->status][[1]],
+							"+",100,
+							"-",-100,
+							"+-",RandomChoice[{-100,100}]])
+						]
 					]
-				]
 			,{edge,encodeEdges}];
 		
 		Graph[encodeEdges,EdgeWeight->weights]
