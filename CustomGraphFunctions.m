@@ -9,8 +9,7 @@ topologyList::usage = "topologyList[g] generates output of directed graph g suit
 generateGraph::usage = "generateGraph[topology] returns a graph based on the topology part of a CNetwork result file.";
 regenerateGraph::usage = "regenerateGraph[topology]returns a graph based on an imported topology file. (Import[\"file.txt\",\"Data\"]).";
 encodeGraph::usage = "encodeGraph[seed,weights,omit] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w. Omit is an optional boolean that determines wheter the floating vertex will be deleted. Its default is True.";
-newEncodeGraph::usagge = " newEncodeGraph[seed] generates a directed graph from the ENCODE consortium and uses seed to generate random weights for unknown edges/vertices. All the weights for know edges are already filled in. Nodes that both repress and activate have a 50/50 ratio of outgoing edges. Unknown nodes are randomly given a category (+,-,+-)";
-fullEncodeGraph::usage = "fullEncodeGraph[seed] generates a directed graph from the ENCODE consortium using the full proximal and distal network. Weights are randomly picked from list weights. Omit is an optional boolean that determines wheter the loose vertices should be omitted. Its default is True.";
+advancedEncodeGraph::usage = "advancedEncodeGraph[seed,full] generates a directed graph from the ENCODE consortium and uses seed to generate unknown weights. Full is an optional boolean that determines wheter the distal edges will be included. Its default is False.";
 getSelfLoops::usage = "getSelfLoops[graph] gives a list of {node number, weight} of graph.";
 weightDistGraph::usage = "weightDistGraph[graph,{actRatio,reprRatio,randRatio},seed] assigns new weights to edges. The second argument determines the ratio of activating, repressing and mixed vertices..";
 removeSL::usage = "removeSL[graph, seed] removes self-loops from a graph by intelligent reshuffling using seed for randomization and returns a new graph.";
@@ -132,75 +131,75 @@ encodeGraph[seed_Integer,w_List,omit_Symbol:True] :=
 		]
 	)]
 
-newEncodeGraph[seed_]:=
-	Module[{prefix,encodeData,tfData,encodeEdges,weights,unknownVertices,edge},(
+advancedEncodeGraph[seed_Integer,full_Symbol:False]:=
+	Module[{prefix,proximalData,distalData,tfData,proximalEdges,distalEdges,vertices,proximalWeights,distalWeights,vertex,edge,type,allEdges,allWeights,testWeights},(
 		SeedRandom[seed];
 		prefix=If[$MachineName=="mediator","~/Project/Code/Mathematica/","/Users/jelmerderonde/Documents/01 - Active Projects/Research project 2/Data/ENCODE/"];
 		
-		encodeData=DeleteCases[Import[prefix<>"enets2.Proximal_filtered.txt","Table"],{}];
-		tfData=Import[prefix<>"tfstatus.txt","Table"];
-		
-		encodeEdges=DirectedEdge@@@Cases[encodeData,{Alternatives@@tfData[[All,1]],Alternatives@@tfData[[All,1]]}];
-		unknownVertices={};
-		
-		weights=Table[
-			Switch[Cases[tfData,{edge[[1]],status_}->status][[1]],
-				"+",100,
-				"-",-100,
-				"+-",RandomChoice[{-100,100}],
-				"?",If[MemberQ[unknownVertices[[All,1]],edge[[1]]],
-						Switch[Cases[unknownVertices,{edge[[1]],status_}->status][[1]],
-							"+",100,
-							"-",-100,
-							"+-",RandomChoice[{-100,100}]],
-						(AppendTo[unknownVertices,{edge[[1]],RandomChoice[{"+","-","+-"}]}];
-						Switch[Cases[unknownVertices,{edge[[1]],status_}->status][[1]],
-							"+",100,
-							"-",-100,
-							"+-",RandomChoice[{-100,100}]])
-						]
-					]
-			,{edge,encodeEdges}];
-		
-		Graph[encodeEdges,EdgeWeight->weights]
-	)]
-
-fullEncodeGraph[seed_]:=
-	Module[{prefix,encodeData,distalData,edgeData,tfData,encodeEdges,unknownVertices,weights},(
-		SeedRandom[seed];
-		
-		prefix=If[$MachineName=="mediator","~/Project/Code/Mathematica/","/Users/jelmerderonde/Documents/01 - Active Projects/Research project 2/Data/ENCODE/"];
-		
-		encodeData=DeleteCases[Import[prefix<>"enets2.Proximal_filtered.txt","Table"],{}];
+		(*Import data*)
+		proximalData=DeleteCases[Import[prefix<>"enets2.Proximal_filtered.txt","Table"],{}];
 		distalData=Import[prefix<>"enets3.Distal.txt","Table"][[All,{1,3}]];
-		edgeData=Join[encodeData,distalData];
-		tfData=Import[prefix<>"tfstatus.txt","Table"];
+		tfData=DeleteCases[Import[prefix<>"tfstatus.txt","Table"],{"TCF7L2",_}];
 		
-		encodeEdges=DeleteDuplicates[DirectedEdge@@@Cases[edgeData,{Alternatives@@tfData[[All,1]],Alternatives@@tfData[[All,1]]}]];
-		unknownVertices={};
+		(*Create edges*)
+		proximalEdges=DeleteDuplicates[DirectedEdge@@@Cases[proximalData,{Alternatives@@tfData[[All,1]],Alternatives@@tfData[[All,1]]}]];
+		distalEdges=DeleteCases[DeleteDuplicates[DirectedEdge@@@Cases[distalData,{Alternatives@@tfData[[All,1]],Alternatives@@tfData[[All,1]]}]],Alternatives@@proximalEdges];
 		
-		weights=Table[
-			Switch[Cases[tfData,{edge[[1]],status_}->status][[1]],
+		(*Add metadata to edges*)
+		proximalEdges=Property[#,{"Network"->"Proximal",EdgeStyle->RGBColor[0.43266956588082706`,0.5137102311741817`,0.6462653543907836`]}]&/@proximalEdges;
+		distalEdges=Property[#,{"Network"->"Distal",EdgeStyle->LightGray}]&/@distalEdges;
+		
+		(*Getting the vertices*)
+		vertices=Table[
+			Property[vertex[[1]],{"KnownType"->vertex[[2]],"AssignedType"->
+			Switch[vertex[[2]],
+				"+","+",
+				"-","-",
+				"+-","+-",
+				"?",RandomChoice[{"+","-","+-"}]
+			]}]
+		,{vertex,tfData}];
+		
+		(*Color the vertices*)
+		vertices=Table[
+			Property[vertex[[1]],AppendTo[vertex[[2]],VertexStyle->Switch["AssignedType"/.vertex[[2]],
+				"+",Green,
+				"-",Red,
+				"+-",Yellow
+			]]]
+		,{vertex,vertices}];
+		
+		(*Generate edge weights*)
+		proximalWeights=Table[
+			edge->Switch[Cases[vertices,Property[edge[[1,1]],{___,HoldPattern["AssignedType"->type_],___}]->type][[1]],
 				"+",100,
 				"-",-100,
-				"+-",RandomChoice[{-100,100}],
-				"?",If[MemberQ[unknownVertices[[All,1]],edge[[1]]],
-						Switch[Cases[unknownVertices,{edge[[1]],status_}->status][[1]],
-							"+",100,
-							"-",-100,
-							"+-",RandomChoice[{-100,100}]],
-						(AppendTo[unknownVertices,{edge[[1]],RandomChoice[{"+","-","+-"}]}];
-						Switch[Cases[unknownVertices,{edge[[1]],status_}->status][[1]],
-							"+",100,
-							"-",-100,
-							"+-",RandomChoice[{-100,100}]])
-						]
-					]
-			,{edge,encodeEdges}];
-			
-			Graph[encodeEdges,EdgeWeight->weights]
-	)]
-
+				"+-",RandomChoice[{-100,100}]]
+		,{edge,proximalEdges}];
+		
+		distalWeights=Table[
+			edge->Switch[Cases[vertices,Property[edge[[1,1]],{___,HoldPattern["AssignedType"->type_],___}]->type][[1]],
+				"+",100,
+				"-",-100,
+				"+-",RandomChoice[{-100,100}]]
+		,{edge,distalEdges}];
+		
+		If[full,allEdges=Join[proximalEdges,distalEdges],allEdges=proximalEdges];
+		If[full,allWeights=Join[proximalWeights,distalWeights],allWeights=proximalWeights];
+		
+		(*Count number of positive and negative weights per vertex*)
+		testWeights={#[[1,1,1]],#[[2]]}&/@allWeights;
+		vertices=Table[
+			Property[vertex[[1]],AppendTo[vertex[[2]],"nPositive"->Length[Cases[testWeights,{vertex[[1]],100}]]]]
+		,{vertex,vertices}];
+		
+		vertices=Table[
+			Property[vertex[[1]],AppendTo[vertex[[2]],"nNegative"->Length[Cases[testWeights,{vertex[[1]],-100}]]]]
+		,{vertex,vertices}];
+		
+		(*Assemble the graph*)
+		Graph[vertices,allEdges,EdgeWeight->allEdges/.allWeights]
+)]
 
 
 weightDistGraph[graph_Graph,{actRatio_,reprRatio_,randRatio_},seed_Integer]:=
