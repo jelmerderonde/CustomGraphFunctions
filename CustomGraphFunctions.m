@@ -9,7 +9,7 @@ topologyList::usage = "topologyList[g] generates output of directed graph g suit
 generateGraph::usage = "generateGraph[topology] returns a graph based on the topology part of a CNetwork result file.";
 regenerateGraph::usage = "regenerateGraph[topology]returns a graph based on an imported topology file. (Import[\"file.txt\",\"Data\"]).";
 encodeGraph::usage = "encodeGraph[seed,weights,omit] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w. Omit is an optional boolean that determines wheter the floating vertex will be deleted. Its default is True.";
-advancedEncodeGraph::usage = "advancedEncodeGraph[seed,full] generates a directed graph from the ENCODE consortium and uses seed to generate unknown weights. Full is an optional boolean that determines wheter the distal edges will be included. Its default is False.";
+advancedEncodeGraph::usage = "advancedEncodeGraph[seed,type] generates a directed graph from the ENCODE consortium and uses seed to generate unknown weights. Type is a string that determines which network to return. Options are: full, proximal and distal.";
 getSelfLoops::usage = "getSelfLoops[graph] gives a list of {node number, weight} of graph.";
 weightDistGraph::usage = "weightDistGraph[graph,{actRatio,reprRatio,randRatio},seed] assigns new weights to edges. The second argument determines the ratio of activating, repressing and mixed vertices..";
 removeSL::usage = "removeSL[graph, seed] removes self-loops from a graph by intelligent reshuffling using seed for randomization and returns a new graph.";
@@ -131,8 +131,8 @@ encodeGraph[seed_Integer,w_List,omit_Symbol:True] :=
 		]
 	)]
 
-advancedEncodeGraph[seed_Integer,full_Symbol:False]:=
-	Module[{prefix,proximalData,distalData,tfData,proximalEdges,distalEdges,vertices,proximalWeights,distalWeights,vertex,edge,type,allEdges,allWeights,testWeights},(
+advancedEncodeGraph[seed_Integer,output_String:"proximal",opts:OptionsPattern[]]:=
+	Module[{prefix,proximalData,distalData,tfData,proximalEdges,distalEdges,vertices,proximalWeights,distalWeights,vertex,edge,type,newEdges,allEdges,allWeights,testWeights,positions},(
 		SeedRandom[seed];
 		prefix=If[$MachineName=="mediator","~/Project/Code/Mathematica/","/Users/jelmerderonde/Documents/01 - Active Projects/Research project 2/Data/ENCODE/"];
 		
@@ -143,7 +143,7 @@ advancedEncodeGraph[seed_Integer,full_Symbol:False]:=
 		
 		(*Create edges*)
 		proximalEdges=DeleteDuplicates[DirectedEdge@@@Cases[proximalData,{Alternatives@@tfData[[All,1]],Alternatives@@tfData[[All,1]]}]];
-		distalEdges=DeleteCases[DeleteDuplicates[DirectedEdge@@@Cases[distalData,{Alternatives@@tfData[[All,1]],Alternatives@@tfData[[All,1]]}]],Alternatives@@proximalEdges];
+		distalEdges=DeleteDuplicates[DirectedEdge@@@Cases[distalData,{Alternatives@@tfData[[All,1]],Alternatives@@tfData[[All,1]]}]];
 		
 		(*Add metadata to edges*)
 		proximalEdges=Property[#,{"Network"->"Proximal",EdgeStyle->RGBColor[0.43266956588082706`,0.5137102311741817`,0.6462653543907836`]}]&/@proximalEdges;
@@ -184,8 +184,11 @@ advancedEncodeGraph[seed_Integer,full_Symbol:False]:=
 				"+-",RandomChoice[{-100,100}]]
 		,{edge,distalEdges}];
 		
-		If[full,allEdges=Join[proximalEdges,distalEdges],allEdges=proximalEdges];
-		If[full,allWeights=Join[proximalWeights,distalWeights],allWeights=proximalWeights];
+		Switch[output,
+			"full",(newEdges=DeleteCases[distalEdges,Property[Alternatives@@proximalEdges[[All,1]],_]];allEdges=Join[proximalEdges,newEdges];positions=Position[distalEdges,Property[Alternatives@@proximalEdges[[All,1]],_]];allWeights=DeleteDuplicates[Join[proximalWeights,Delete[distalWeights,positions]]];),
+			"proximal",(allEdges=proximalEdges;allWeights=proximalWeights;),
+			"distal",(allEdges=distalEdges;allWeights=distalWeights;)
+		];
 		
 		(*Count number of positive and negative weights per vertex*)
 		testWeights={#[[1,1,1]],#[[2]]}&/@allWeights;
@@ -198,7 +201,7 @@ advancedEncodeGraph[seed_Integer,full_Symbol:False]:=
 		,{vertex,vertices}];
 		
 		(*Assemble the graph*)
-		Graph[vertices,allEdges,EdgeWeight->allEdges/.allWeights]
+		Graph[vertices,allEdges,EdgeWeight->allEdges/.allWeights,opts]
 )]
 
 
