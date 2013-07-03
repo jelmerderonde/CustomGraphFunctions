@@ -11,6 +11,7 @@ regenerateGraph::usage = "regenerateGraph[topology]returns a graph based on an i
 encodeGraph::usage = "encodeGraph[seed,weights,omit] generates a directed graph from the ENCODE consortium and uses seed to generate random weights, picked from list w. Omit is an optional boolean that determines wheter the floating vertex will be deleted. Its default is True.";
 advancedEncodeGraph::usage = "advancedEncodeGraph[seed,type] generates a directed graph from the ENCODE consortium and uses seed to generate unknown weights. Type is a string that determines which network to return. Options are: full, proximal and distal.";
 getSelfLoops::usage = "getSelfLoops[graph] gives a list of {node number, weight} of graph.";
+countLooseNodes::usage = "countLooseNodes[graph] counts the number of nodes with no connecting edges or only a selfloop.";
 weightDistGraph::usage = "weightDistGraph[graph,{actRatio,reprRatio,randRatio},seed] assigns new weights to edges. The second argument determines the ratio of activating, repressing and mixed vertices..";
 removeSL::usage = "removeSL[graph, seed] removes self-loops from a graph by intelligent reshuffling using seed for randomization and returns a new graph.";
 bruteRemoveSL::usage = "bruteRemoveSL[graph] removes all self-loops from a graph. Nothing intelligent about it.";
@@ -226,6 +227,23 @@ getSelfLoops[graph_Graph]:=
 	Module[{weightMap,x,w},(
 		weightMap=getWeightMap[graph];
 		Cases[weightMap,HoldPattern[x_\[DirectedEdge]x_->w_]->{x,w}]
+	)]
+
+countLooseNodes[graph_Graph]:=
+	Module[{vertices,edges,normal,sl},(
+		vertices=VertexList[graph];
+		edges=EdgeList[graph];
+		normal=Length[Cases[VertexDegree[graph],0]];
+		sl=0;
+		
+		Table[
+			If[VertexDegree[graph,vertex]==2,
+				If[Length[Cases[edges,vertex\[DirectedEdge]vertex]]>0,
+					sl+=1;
+				];
+			];
+		,{vertex,vertices}];
+		normal+sl
 	)]
 
 removeSL[graph_Graph,seed_Integer]:=
