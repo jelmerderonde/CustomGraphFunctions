@@ -12,6 +12,7 @@ encodeGraph::usage = "encodeGraph[seed,weights,omit] generates a directed graph 
 advancedEncodeGraph::usage = "advancedEncodeGraph[seed,type] generates a directed graph from the ENCODE consortium and uses seed to generate unknown weights. Type is a string that determines which network to return. Options are: full, proximal and distal.";
 getSelfLoops::usage = "getSelfLoops[graph] gives a list of {node number, weight} of graph.";
 countLooseNodes::usage = "countLooseNodes[graph] counts the number of nodes with no connecting edges or only a selfloop.";
+getLooseNodes::usage = "getLooseNodes[graph] returns a list of nodes with no connecting edges or only a selfloop.";
 weightDistGraph::usage = "weightDistGraph[graph,{actRatio,reprRatio,randRatio},seed] assigns new weights to edges. The second argument determines the ratio of activating, repressing and mixed vertices..";
 removeSL::usage = "removeSL[graph, seed] removes self-loops from a graph by intelligent reshuffling using seed for randomization and returns a new graph.";
 bruteRemoveSL::usage = "bruteRemoveSL[graph] removes all self-loops from a graph. Nothing intelligent about it.";
@@ -244,6 +245,22 @@ countLooseNodes[graph_Graph]:=
 			];
 		,{vertex,vertices}];
 		normal+sl
+	)]
+
+getLooseNodes[graph_Graph]:=
+	Module[{vertices,edges,result},(
+		vertices=VertexList[graph];
+		edges=EdgeList[graph];
+		
+		result={};
+
+		Table[
+			If[VertexDegree[graph,vertex]==0,AppendTo[result,vertex]];
+			If[VertexDegree[graph,vertex]==2,
+				If[Length[Cases[edges,vertex\[DirectedEdge]vertex]]>0,AppendTo[result,vertex]]];
+		,{vertex,vertices}];
+		
+		DeleteCases[result,Null]
 	)]
 
 removeSL[graph_Graph,seed_Integer]:=
