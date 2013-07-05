@@ -30,6 +30,7 @@ degreeHistogram::usage = "degreeHistogram[graph, type, options] gives a histogra
 levelInteractions::usage = "levelInteractions[g,n,s] gives a level interaction matrix of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
 resultsIndex::usage = "resultsIndex[inputdir] searches the directory inputdir for result files and displays the available run results as a table.";
 prepareRun::usage = "prepareRun[inputdirs,parameters,nproc,outputdir] prepares a run in the outputdir with the files in inputdirs as input.";
+advancedPrepareRun::usage = "advancedPrepareRun[inputDirs,parameters,nProc,initialStatesDir,outputDir] prepares a run in the outputdir with the files in inputdirs as input.";
 domainSizesHistogram::usage = "domainSizesHistogram[data] returns a log log histogram of domain sizes.";
 getAttractorProfile::usage = "getAttractorProfile[resultsymbol] returns the attractorProfile of a result symbol.";
 attractorHistogram::usage = "attractorHistogram[symbols,opts] returns a histogram with the ratio of active nodes on horizontal axis and the frequency of attractors on vertical. Only accepts a list of 1 or more result symbols.";
@@ -745,6 +746,76 @@ prepareRun[inputdirs_List,parameters_List,nproc_Integer,outputdir_String]:=
 		,"Text"];
 		
 )]
+
+advancedPrepareRun[inputDirs_List,parameters_List,nProc_Integer,initialStatesDir_String,outputDir_String]:=
+	Module[{inputFiles,networkSizes,nInitialStates,newStates,newState,commands},(
+		SetDirectory[outputDir];
+		DeleteFile[FileNames["*.*"]];
+		
+		(*Gather all inputfiles*)
+		inputFiles={};
+		Table[
+			AppendTo[inputFiles,FileNames["*.txt",inputDir]];
+		,{inputDir,inputDirs}];
+		inputFiles=Flatten[inputFiles];
+		
+		(*Copy all the files*)
+		Table[
+			CopyFile[file,FileNameJoin[{Directory[],FileNameTake[file]}]];
+		,{file,inputFiles}];
+		
+		(*Get network sizes*)
+		inputFiles=Table[
+			{file,ToExpression[Import[file,"Lines"][[1]]]}
+		,{file,FileNames["*.txt"]}];
+		networkSizes=Union[inputFiles[[All,2]]];
+		
+		(*Check if we have initial states files for all inputfiles*)
+		SetDirectory[initialStatesDir];
+		
+		nInitialStates=Length[Import[FileNames["*.txt"][[1]],"Lines"]];
+		If[nInitialStates==0,Print["No initial states files"];Abort[];];
+		Table[
+			If[!FileExistsQ[ToString[size]<>".txt"],
+				(*Generate new file*)
+				SeedRandom[size];
+				newStates={};
+				While[Length[newStates]<nInitialStates,
+					newState=StringJoin[ToString/@Table[RandomChoice[{0,1}],{size}]];
+					If[!MemberQ[newStates,newState],AppendTo[newStates,newState]];
+				]
+				Export[ToString[size]<>".txt",newStates,"Table"];
+			],{size,networkSizes}];
+		
+		(*Build the commands*)
+		SetDirectory[outputDir];
+		
+		commands=Flatten[Table[
+			Table[
+				"./main --input "<>file[[1]]<> " "<>parameter<>" --same-states "<>ToString[file[[2]]]<>".txt"
+			,{parameter,parameters}]
+		,{file,inputFiles}]];
+		
+		(*Partition commands*)
+		commands=Partition[commands,IntegerPart[Length[commands]/nProc],IntegerPart[Length[commands]/nProc],1,{}];
+		
+		(*Build the run files*)
+		Table[
+			Export[ToString[i]<>".sh",commands[[i]],"Text"]
+		,{i,1,Length[commands]}];
+		
+		Export["run.sh",
+			Table[
+				"screen -d -m ./"<>ToString[file]
+		,{file,FileNames["*.sh"]}],"Text"];
+		
+		(*Copy the initial states files*)
+		SetDirectory[initialStatesDir];
+		Table[
+			CopyFile[ToString[size]<>".txt",FileNameJoin[{outputDir,ToString[size]<>".txt"}]];
+		,{size,networkSizes}];
+		
+	)]
 
 resultsIndex[inputdir_String]:=
 	Module[{filenames,datasets,methods,networks,variants,result,x},(
