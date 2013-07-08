@@ -137,7 +137,11 @@ encodeGraph[seed_Integer,w_List,omit_Symbol:True] :=
 advancedEncodeGraph[seed_Integer,output_String:"proximal",opts:OptionsPattern[]]:=
 	Module[{prefix,proximalData,distalData,tfData,proximalEdges,distalEdges,vertices,proximalWeights,distalWeights,vertex,edge,type,newEdges,allEdges,allWeights,testWeights,positions},(
 		SeedRandom[seed];
-		prefix=If[$MachineName=="mediator","~/Project/Code/Mathematica/","/Users/jelmerderonde/Documents/01 - Active Projects/Research project 2/Data/ENCODE/"];
+		prefix=Switch[$MachineName,
+			"jderonde","/Users/jelmerderonde/Documents/01 - Active Projects/Research project 2/Data/ENCODE/",
+			"mediator","~/Project/Code/Mathematica/",
+			_,"/linuxhome/tmp/jelmer/Mathematica/"
+		];
 		
 		(*Import data*)
 		proximalData=DeleteCases[Import[prefix<>"enets2.Proximal_filtered.txt","Table"],{}];
