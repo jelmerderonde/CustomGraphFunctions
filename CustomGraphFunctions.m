@@ -85,11 +85,11 @@ ai[]:=
 	)]
 
 generateTopology[graph_Graph]:=
-	Module[{edges,translationRules,data},(
-		translationRules=Table[Rule[VertexList[graph][[i]],i],{i,1,VertexCount[graph]}];
-		edges=Map[#->PropertyValue[{graph,#},EdgeWeight]&,EdgeList[graph]];
-		data=Replace[edges/.translationRules,{DirectedEdge->List,Rule->List},\[Infinity],Heads->True];
-		Table[Insert[data[[i,1]],data[[i,2]],2],{i,1,EdgeCount[graph]}]
+	Module[{weightMap,translationRules},(
+		weightMap=getWeightMap[graph];
+		translationRules=Rule@@@Partition[Riffle[VertexList[graph],Range[VertexCount[graph]]],2];
+		
+		Table[{weight[[1,1]]/.translationRules,weight[[2]],weight[[1,2]]/.translationRules},{weight,weightMap}]
 	)]
 
 topologyList[graph_Graph]:=
