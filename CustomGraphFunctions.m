@@ -854,7 +854,7 @@ readResult[name_Symbol,inputfile_String]:=
 		rawdata=Delete[rawdata,Partition[Range[1,3+nedges],1]];
 		
 		If[Length[rawdata[[3]]]>4,attrout=1,attrout=0];
-		rawdata=DeleteCases[rawdata,If[attrout==1,{0,{},0,{0},0},{0,0,{0},0}],\[Infinity]];
+		rawdata=DeleteCases[rawdata,If[attrout==1,{0,{"0"},0,{0},0},{0,0,{0},0}],\[Infinity]];
 
 		networkName[name]^=StringCases[inputfile,__~~"~"~~networkname:RegularExpression["\\D+"]->networkname][[1]];
 		networkID[name]^=StringCases[inputfile,__~~"~"~~RegularExpression["\\D+"]~~networkid:RegularExpression["\\d+"]->networkid][[1]];
