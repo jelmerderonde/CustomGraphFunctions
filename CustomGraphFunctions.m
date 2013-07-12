@@ -49,6 +49,7 @@ synchronousQ::usage = "synchronousQ[result] returns a boolean whether the run wa
 randomOrderQ::usage = "randomOrderQ[result] returns a boolean whether the update order of the run was random.";
 decayCounter::usage = "decayCounter[result] returns the decay counter.";
 falseFeedbackQ::usage = "falseFeedbackQ[result] returns a boolean whether the false feedback was on in the run.";
+updateMethod::usage = "updateMethod[result] retursn the update method used to create the output file.";
 fullResults::usage = "fullResults[result] returns all (non-zero) found attractors, including statistics.";
 attractors::usage = "attractors[result] returns all (non-zero) found attractor states.";
 attractorCount::usage = "attractorCount[result] returns the number of (non-zero) attractors found.";
@@ -867,6 +868,7 @@ readResult[name_Symbol,inputfile_String]:=
 		randomOrderQ[name]^=If[rawdata[[2,7]]==1,True,False];
 		decayCounter[name]^=rawdata[[2,8]];
 		falseFeedbackQ[name]^=If[rawdata[[2,9]]==1,True,False];
+		updateMethod[name]^=Switch[rawdata[[2,10]],0,"sum>0",1,"sum>=0",_,"?"];
 		fullResults[name]^=rawdata[[4;;-1]];
 		If[attrout==1,attractors[name]^=rawdata[[4;;-1,2]]];
 		attractorCount[name]^=Length[rawdata]-3;
