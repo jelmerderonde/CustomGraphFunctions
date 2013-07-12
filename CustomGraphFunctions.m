@@ -18,6 +18,7 @@ removeSL::usage = "removeSL[graph, seed] removes self-loops from a graph by inte
 bruteRemoveSL::usage = "bruteRemoveSL[graph] removes all self-loops from a graph. Nothing intelligent about it.";
 addSL::usage = "addSL[graph,n,seed] adds n new self loops to the graph by intelligent reshuffling using seed for randomization and returns the graph.";
 addSpecificSL::usage = "addSpecificSL[graph, vertex, weight], adds a selfloop to vertex in graph with weight. Only if it doesn' exist yet.";
+addRandomEdges::usage = "addRandomEdges[graph,n,seed] adds n new random edges to the graph and returns the new graph.";
 getWeightMap::usage = "getWeightMap[graph] returns the weightmap of a graph.";
 randomIOGraph::usage = "randomIOGraph[g,i,interval,seed,keepselfloops] generates a random graph with the same In/Out degree distribution as graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed. keepselfsloops is a boolean. If set to True, the algorithm will not shuffle self-loops.";
 randomVDGraph::usage = "randomVDGraph[g,i,interval,seed,keepselfloops] generates a random graph with the same total degree distribution as graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed. keepselfsloops is a boolean. If set to True, the algorithm will not shuffle self-loops.";
@@ -403,6 +404,28 @@ addSpecificSL[graph_Graph,vertex_,weight_Integer]:=
 		
 		Graph[vertices,edges,EdgeWeight->edges/.weightMap]
 	]
+
+addRandomEdges[graph_Graph,nNodes_Integer,seed_Integer]:=
+	Module[{newGraph,vertices,weights,i,newEdge,edges,weightMap},(
+		SeedRandom[seed];
+		newGraph=graph;
+		vertices=VertexList[graph];
+		weights=Union[getWeightMap[graph][[All,2]]];
+		i=0;
+		
+		While[i<nNodes,
+			newEdge=RandomChoice[vertices]\[DirectedEdge]RandomChoice[vertices];
+			If[Length[Cases[EdgeList[newGraph],newEdge]]==0&&newEdge[[1]]!=newEdge[[2]],
+				edges=Append[EdgeList[newGraph],newEdge];
+				weightMap=Append[getWeightMap[newGraph],newEdge->RandomChoice[weights]];
+				
+				newGraph=Graph[vertices,edges,EdgeWeight->edges/.weightMap];
+				i++;
+			];
+		];
+		
+		newGraph
+	)]
 
 getWeightMap[graph_Graph]:=Map[#->PropertyValue[{graph,#},EdgeWeight]&,EdgeList[graph]];
 
