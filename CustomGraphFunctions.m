@@ -891,7 +891,7 @@ readResult[name_Symbol,inputfile_String]:=
 		randomOrderQ[name]^=If[rawdata[[2,7]]==1,True,False];
 		decayCounter[name]^=rawdata[[2,8]];
 		falseFeedbackQ[name]^=If[rawdata[[2,9]]==1,True,False];
-		updateMethod[name]^=Switch[rawdata[[2,10]],0,"sum>0",1,"sum>=0",_,"?"];
+		updateMethod[name]^=If[Length[rawdata[[2]]]>9,Switch[rawdata[[2,10]],0,"normal",1,"sum>=0, stays the same",_,"?"],"normal"];
 		fullResults[name]^=rawdata[[4;;-1]];
 		If[attrout==1,attractors[name]^=rawdata[[4;;-1,2]]];
 		attractorCount[name]^=Length[rawdata]-3;
