@@ -89,7 +89,7 @@ ai[]:=
 generateTopology[graph_Graph]:=
 	Module[{weightMap,translationRules},(
 		weightMap=getWeightMap[graph];
-		translationRules=Rule@@@Partition[Riffle[VertexList[graph],Range[VertexCount[graph]]],2];
+		translationRules=Rule@@@Partition[Riffle[Sort[VertexList[graph]],Range[VertexCount[graph]]],2];
 		
 		Table[{weight[[1,1]]/.translationRules,weight[[2]],weight[[1,2]]/.translationRules},{weight,weightMap}]
 	)]
@@ -140,7 +140,7 @@ advancedEncodeGraph[seed_Integer,output_String:"proximal",opts:OptionsPattern[]]
 	Module[{prefix,proximalData,distalData,tfData,proximalEdges,distalEdges,vertices,proximalWeights,distalWeights,vertex,edge,type,newEdges,allEdges,allWeights,testWeights,positions},(
 		SeedRandom[seed];
 		prefix=Switch[$MachineName,
-			"jderonde","/Users/jelmerderonde/Documents/01 - Active Projects/Research project 2/Data/ENCODE/",
+			"jderonde","/Users/jelmerderonde/Documents/01 - Active Projects/2012a - Research project 2/Data/ENCODE/",
 			"mediator","~/Project/Code/Mathematica/",
 			_,"/linuxhome/tmp/jelmer/Mathematica/"
 		];
