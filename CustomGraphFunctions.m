@@ -25,6 +25,8 @@ randomVDGraph::usage = "randomVDGraph[g,i,interval,seed,keepselfloops] generates
 randomAllGraph::usage = "randomAllGraph[g,i,interval,seed,keepselfloops] generates a random graph from graph g, by shuffeling random edges i times. Interval specifies how often intermediate results should be returned. Seed sets the random seed. keepselfsloops is a boolean. If set to True, the algorithm will not shuffle self-loops.";
 hDegree::usage = "hDegree[g,v] returns the hierarchy degree of vertex v of graph g.";
 countSelfLoops::usage = "countSelfLoops[g] returns the number of self loops in graph g.";
+vertexHasSelfFlow::usage = "vertexHasSelfFlow[g,v] checks whether vertex v in graph g can reach itself.";
+selfFlowNodes::usage = "selfFlowNodes[g] returns a list of nodes in graph g that can reach themselves.";
 hierarchyLevels::usage = "hierarchyLevels[g,n,s] gives a list of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
 hierarchyHistogram::usage = "hierarchyHistogram[g,n,s] gives a histogram of n hierarchy levels of graph g, by sshing to server s and executing a Matlab script.";
 degreeHistogram::usage = "degreeHistogram[graph, type, options] gives a histogram of the vertexdegree's of graph. Type can be \"In\", \"Out\" or \"All\".";
@@ -663,6 +665,18 @@ countSelfLoops[g_Graph]:=
 	Module[{x},
 		Cases[EdgeList[g],x_\[DirectedEdge]x_]//Length
 	]
+
+vertexHasSelfFlow[g_Graph,v_]:=
+	Module[{edges,result},(
+		edges=EdgeList[g];
+		result=False;
+		BreadthFirstScan[g,v,{
+			"CycleEdge"->(If[#[[2]]==v,result=True;Return[];]&)
+		}];
+	result
+	)]
+
+selfFlowNodes[g_Graph]:=DeleteCases[Table[If[vertexHasSelfFlow[g,v],v],{v,VertexList[g]}],Null]
 
 levelInteractions[graph_Graph,nlevels_Integer,server_String,opts:OptionsPattern[]]:=
 	Module[{s,levels},(
