@@ -70,6 +70,10 @@ resultRow::usage = "resultRow[symbols,server] uses a set of result symbols to cr
 resultTable::usage = "resultTable[symbols,server] creates resultRows of all sets of symbols and displays it in a single grid.";
 fullResultTable::usage = "fullResultTable[inputdir,server] gives the resultTable of all the files in inputdir. Use with caution!";
 
+toBinary::usage = "toBinary[string] splits a state string into ones and zeros.";
+clusterAttractors::usage = "clusterAttractors[dataset] clusters a dataset containing labels and attractor states ({label,bitstring}). Needs[\"HierarchicalClustering`\"]";
+
+
 
 Begin["`Private`"]
 
@@ -1084,6 +1088,81 @@ resultTable[symbols_List,server_String]:=
 
 fullResultTable[inputdir_String,server_String]:=
 	resultTable[sortResultSymbols[readResultDirectory[inputdir]],server]
+
+toBinary[s_String]:=
+	Module[{out},(
+		out=ToExpression/@StringSplit[s,""]
+	)]
+
+clusterAttractors[data_List,imageSize_Integer:1000]:=
+	Module[{newData,topMatrix,topCluster,leftMatrix,leftCluster,leftDendogram,activationPlot,topDendogram,columnShuffle,rowShuffle,arrayData,i,dataset,labelData,row,colors},(
+		(*Extracting relevant data*)
+		newData=toBinary/@data[[All,2]];
+		
+		(*Making the top dendogram*)
+		topMatrix=HierarchicalClustering`DistanceMatrix[newData,DistanceFunction->HammingDistance];
+		topCluster=HierarchicalClustering`DirectAgglomerate[topMatrix,Linkage->"Ward"];
+		topDendogram=HierarchicalClustering`DendrogramPlot[topCluster];
+		
+		(*Making the left dendogram*)
+		leftMatrix=HierarchicalClustering`DistanceMatrix[Transpose[newData],DistanceFunction->HammingDistance];
+		leftCluster=HierarchicalClustering`DirectAgglomerate[leftMatrix,Linkage->"Ward"];
+		leftDendogram=HierarchicalClustering`DendrogramPlot[leftCluster,Orientation->Left];
+		
+		(*Generating order for the columns*)
+		columnShuffle=HierarchicalClustering`ClusterFlatten[HierarchicalClustering`Agglomerate[newData->Range[Length[newData]],DistanceFunction->HammingDistance,Linkage->"Ward"]];
+		rowShuffle=HierarchicalClustering`ClusterFlatten[HierarchicalClustering`Agglomerate[Transpose[newData]->Range[Length[Transpose[newData]]],DistanceFunction->HammingDistance,Linkage->"Ward"]];
+		
+		(*Setting colors and labels*)
+		colors={ColorData[3,3],ColorData[3,6],ColorData[1,6],ColorData[3,9],ColorData[1,1],ColorData[1,3],ColorData[1,4],ColorData[2,10],ColorData[8,14],ColorData[9,4],ColorData[9,1]};
+		i=0;
+		labelData=Table[
+			i++;
+			{dataset,i,colors[[Mod[i,Length[colors]]]]}
+		,{dataset,Union[data[[All,1]]]}];
+
+		arrayData=Table[
+			Replace[toBinary[row[[2]]],1->Select[labelData,#[[1]]==row[[1]]&][[1,2]],1]
+		,{row,data}];
+		
+		(*Making the heatmap*)
+		activationPlot=ArrayPlot[
+			Transpose[arrayData][[Reverse[rowShuffle],columnShuffle]],
+			Mesh->True,
+			ImageSize->imageSize,
+			PlotRangePadding->0,
+			AspectRatio->1,
+			ColorRules->Prepend[#[[2]]->#[[3]]&/@labelData,0->White],
+			FrameTicks->{{All,None},{None,None}}
+		];
+		
+		(*Putting it all together*)
+		Grid[{
+			{Null,Graphics[
+				topDendogram[[1]],
+				ImageSize->{imageSize,imageSize/3},
+				AspectRatio->1/3,
+				PlotRangePadding->None
+			]},
+			{Graphics[
+				leftDendogram[[1]],
+				ImageSize->{imageSize/3,imageSize},
+				AspectRatio->3,
+				PlotRangePadding->None
+			],
+			activationPlot,
+			Rotate["\[LongLeftArrow] Transcription factors \[LongRightArrow]",90Degree]
+			},
+			{Null,"\[LongLeftArrow] Attractors \[LongRightArrow]"},
+			{Null,SwatchLegend[
+				labelData[[All,3]],
+				StringJoin[MapAt[ToUpperCase,Characters[#],1]]&/@labelData[[All,1]],
+				LegendMarkerSize->16,
+				LegendLayout->"Row"]}
+			}]
+	)]
+
+
 
 End[]
 
