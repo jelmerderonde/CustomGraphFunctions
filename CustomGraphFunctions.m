@@ -5,6 +5,7 @@ BeginPackage["CustomGraphFunctions`"];
 
 ai::usage "ai[], gives a lists of mutants (and mediator) with load";
 generateTopology::usage = "generateTopology[g] generates a list whose elements encode edges in directed graph g with weights";
+getTransformRules::usage = "getTranformRules[g] gives the rules used to transform a graph into a list of numbers";
 topologyList::usage = "topologyList[g] generates output of directed graph g suitable for export to use with CNetwork.";
 generateGraph::usage = "generateGraph[topology] returns a graph based on the topology part of a CNetwork result file.";
 regenerateGraph::usage = "regenerateGraph[topology]returns a graph based on an imported topology file. (Import[\"file.txt\",\"Data\"]).";
@@ -95,6 +96,9 @@ generateTopology[graph_Graph]:=
 		
 		Table[{weight[[1,1]]/.translationRules,weight[[2]],weight[[1,2]]/.translationRules},{weight,weightMap}]
 	)]
+
+getTransformRules[graph_Graph]:=
+	Rule@@@Partition[Riffle[Sort[VertexList[graph]],Range[VertexCount[graph]]],2]
 
 topologyList[graph_Graph]:=
 	Module[{output},(
